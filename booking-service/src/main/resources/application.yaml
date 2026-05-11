@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: booking-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/booking_db
+    username: postgres
+    password: 1234
+    driver-class-name: org.postgresql.Driver
+
+    hikari:
+      initialization-fail-timeout: 60000
+
+  jpa:
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+    defer-datasource-initialization: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  sql:
+    init:
+      mode: always
+
+server:
+  port: 8082
+
+jwt:
+  secret: YourSuperSecretKeyAtLeast32CharsLong123!
+  expirationMinutes: 60
