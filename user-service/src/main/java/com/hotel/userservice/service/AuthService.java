@@ -9,7 +9,6 @@ import com.hotel.userservice.repository.UserRepository;
 import com.hotel.userservice.security.JwtService;
 import jakarta.annotation.PostConstruct;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;

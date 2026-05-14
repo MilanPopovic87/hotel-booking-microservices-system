@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+
+            - id: user-service
+              uri: http://localhost:8081
+              predicates:
+                - Path=/api/users/**,/api/auth/**
+
+            - id: booking-service
+              uri: http://localhost:8082
+              predicates:
+                - Path=/api/bookings/**,/api/rooms/**
+
+jwt:
+  secret: YourSuperSecretKeyAtLeast32CharsLong123!
+  expirationMinutes: 60
