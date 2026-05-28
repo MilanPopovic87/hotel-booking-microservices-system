@@ -1,0 +1,32 @@
+<h2>Available Rooms</h2>
+
+<!-- Loading -->
+<div *ngIf="loading()">Loading rooms...</div>
+
+<!-- No rooms -->
+<div *ngIf="!loading() && rooms().length === 0">No rooms found.</div>
+
+<!-- Rooms list -->
+<div class="rooms-grid" *ngIf="rooms().length > 0">
+    <mat-card class="room-card" *ngFor="let room of rooms(); trackBy: trackById">
+        <mat-card-header>
+            <mat-card-title>{{ room.name }}</mat-card-title>
+            <mat-card-subtitle>{{ room.type }}</mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+            <p>Price: {{ room.price }} €</p>
+            <p>Status:
+                <span [class.available]="room.available" [class.booked]="!room.available">
+                    {{ room.available ? 'Available' : 'Booked' }}
+                </span>
+            </p>
+        </mat-card-content>
+
+        <mat-card-actions>
+            <button mat-raised-button color="primary" [disabled]="!room.available" (click)="goToBooking(room.id)">
+                Book
+            </button>
+        </mat-card-actions>
+    </mat-card>
+</div>

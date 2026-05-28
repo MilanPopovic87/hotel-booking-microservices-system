@@ -1,8 +1,12 @@
 package com.hotel.userservice.controller;
 
+import com.hotel.userservice.dto.UpdateUserRequest;
 import com.hotel.userservice.dto.UserResponse;
 import com.hotel.userservice.entity.User;
+import com.hotel.userservice.security.CustomUserPrincipal;
 import com.hotel.userservice.service.UserService;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -43,8 +47,18 @@ public class UserController {
     // GET USER BY ID
     // =========================
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public UserResponse getUserById(@PathVariable Long id) {
         return mapToResponse(userService.getUserById(id));
+    }
+
+    // Internal microservice endpoint
+    @GetMapping("/internal/{id}")
+    public UserResponse getUserInternal(@PathVariable Long id) {
+
+        return mapToResponse(
+                userService.getUserById(id)
+        );
     }
 
     // =========================
@@ -56,13 +70,33 @@ public class UserController {
     }
 
     // =========================
+    // GET CURRENT USER
+    // =========================
+    @GetMapping("/me")
+    public UserResponse getCurrentUser(Authentication authentication) {
+
+        CustomUserPrincipal principal =
+                (CustomUserPrincipal) authentication.getPrincipal();
+
+        String username = principal.getUsername();
+
+        return mapToResponse(
+                userService.getUserByUsername(username)
+        );
+    }
+
+    // =========================
     // UPDATE USER (ADMIN ONLY)
     // =========================
     @PutMapping("/{id}")
-    public UserResponse updateUser(@PathVariable Long id,
-                                   @RequestBody User user) {
+    public UserResponse updateUser(
+            @PathVariable Long id,
+            @RequestBody UpdateUserRequest request
+    ) {
 
-        return mapToResponse(userService.updateUser(id, user));
+        return mapToResponse(
+                userService.updateUser(id, request)
+        );
     }
 
     // =========================

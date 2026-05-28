@@ -2,13 +2,13 @@ package com.hotel.booking.dto;
 
 import java.time.LocalDate;
 
-public class BookingRequestDTO {
+public class BookingRequest {
 
     private Long roomId;
     private LocalDate checkInDate;
     private LocalDate checkOutDate;
 
-    public BookingRequestDTO() {
+    public BookingRequest() {
     }
 
     public Long getRoomId() {

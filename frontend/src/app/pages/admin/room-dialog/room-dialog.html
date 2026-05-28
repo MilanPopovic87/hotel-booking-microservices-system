@@ -1,0 +1,54 @@
+<h2 mat-dialog-title>{{ data.room ? 'Edit Room' : 'Add Room' }}</h2>
+
+<form [formGroup]="roomForm" (ngSubmit)="save()">
+    <mat-dialog-content>
+        <!-- ===== Room Name ===== -->
+        <mat-form-field appearance="fill" class="full-width">
+            <mat-label>Room Name</mat-label>
+            <input matInput formControlName="name" required />
+
+            <!-- Frontend validation errors -->
+            <mat-error *ngIf="roomForm.get('name')?.hasError('required') && roomForm.get('name')?.touched">
+                Name is required
+            </mat-error>
+
+            <!-- Backend error (room name exists) -->
+            <mat-error *ngIf="roomForm.get('name')?.hasError('exists')">
+                Room name already exists
+            </mat-error>
+        </mat-form-field>
+
+        <!-- ===== Room Type ===== -->
+        <mat-form-field appearance="fill" class="full-width">
+            <mat-label>Room Type</mat-label>
+            <mat-select formControlName="type">
+                <mat-option value="STANDARD">STANDARD</mat-option>
+                <mat-option value="DELUXE">DELUXE</mat-option>
+                <mat-option value="SUITE">SUITE</mat-option>
+            </mat-select>
+        </mat-form-field>
+
+        <!-- ===== Price ===== -->
+        <mat-form-field appearance="fill" class="full-width">
+            <mat-label>Price</mat-label>
+            <input matInput type="number" formControlName="price" required min="0" />
+
+            <mat-error *ngIf="roomForm.get('price')?.hasError('required') && roomForm.get('price')?.touched">
+                Price is required
+            </mat-error>
+            <mat-error *ngIf="roomForm.get('price')?.hasError('min')">
+                Price must be at least 0
+            </mat-error>
+        </mat-form-field>
+
+        <!-- ===== Available ===== -->
+        <mat-checkbox formControlName="available">Available</mat-checkbox>
+    </mat-dialog-content>
+
+    <mat-dialog-actions align="end">
+        <button mat-button type="button" (click)="cancel()">Cancel</button>
+        <button mat-raised-button color="primary" type="submit">
+            {{ data.room ? 'Update' : 'Add' }}
+        </button>
+    </mat-dialog-actions>
+</form>

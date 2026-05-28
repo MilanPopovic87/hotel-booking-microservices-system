@@ -1,8 +1,7 @@
 package com.hotel.booking.controller;
 
-import com.hotel.booking.dto.BookingRequestDTO;
-import com.hotel.booking.dto.BookingResponseDTO;
-import com.hotel.booking.entity.Booking;
+import com.hotel.booking.dto.BookingRequest;
+import com.hotel.booking.dto.BookingResponse;
 import com.hotel.booking.service.BookingService;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -21,35 +20,26 @@ public class BookingController {
 
     // Get all bookings
     @GetMapping
-    public List<BookingResponseDTO> getAllBookings() {
-        return bookingService.getAllBookings().stream()
-                .map(BookingResponseDTO::new)
-                .toList();
+    public List<BookingResponse> getAllBookings() {
+        return bookingService.getAllBookings();
     }
 
     // Get booking by ID
     @GetMapping("/{id}")
-    public BookingResponseDTO getBookingById(@PathVariable Long id) {
-        return new BookingResponseDTO(
-                bookingService.getBookingById(id)
-        );
+    public BookingResponse getBookingById(@PathVariable Long id) {
+        return bookingService.getBookingById(id);
     }
 
     // Get my bookings
     @GetMapping("/my")
-    public List<BookingResponseDTO> getMyBookings(Authentication authentication) {
-        return bookingService.getMyBookings(authentication)
-                .stream()
-                .map(BookingResponseDTO::new)
-                .toList();
+    public List<BookingResponse> getMyBookings(Authentication authentication) {
+        return bookingService.getMyBookings(authentication);
     }
 
     // Get bookings by room
     @GetMapping("/by-room/{roomId}")
-    public List<BookingResponseDTO> getBookingsByRoom(@PathVariable Long roomId) {
-        return bookingService.getBookingsByRoomId(roomId).stream()
-                .map(BookingResponseDTO::new)
-                .toList();
+    public List<BookingResponse> getBookingsByRoom(@PathVariable Long roomId) {
+        return bookingService.getBookingsByRoomId(roomId);
     }
 
     // INTERNAL ONLY: Used by other services (e.g. User Service) to verify whether a user has bookings
@@ -60,20 +50,15 @@ public class BookingController {
 
     // Create a booking
     @PostMapping
-    public BookingResponseDTO create(@RequestBody BookingRequestDTO dto, Authentication authentication) {
-        Booking booking = bookingService.createBooking(dto, authentication);
-        return new BookingResponseDTO(booking);
+    public BookingResponse create(@RequestBody BookingRequest dto, Authentication authentication) {
+        return bookingService.createBooking(dto, authentication);
     }
 
     // Update a booking
     // Reserved for future admin booking edits
     @PutMapping("/{id}")
-    public BookingResponseDTO updateBooking(
-            @PathVariable Long id,
-            @RequestBody BookingRequestDTO dto
-    ) {
-        Booking booking = bookingService.updateBooking(id, dto);
-        return new BookingResponseDTO(booking);
+    public BookingResponse updateBooking(@PathVariable Long id, @RequestBody BookingRequest dto) {
+        return bookingService.updateBooking(id, dto);
     }
 
     // Delete a booking

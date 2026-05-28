@@ -1,6 +1,7 @@
 package com.hotel.userservice.service;
 
 import com.hotel.userservice.client.BookingClient;
+import com.hotel.userservice.dto.UpdateUserRequest;
 import com.hotel.userservice.entity.User;
 import com.hotel.userservice.repository.UserRepository;
 import org.springframework.http.HttpStatus;
@@ -40,7 +41,6 @@ public class UserService {
     // GET USER BY ID
     // =========================
 
-    @PreAuthorize("hasRole('ADMIN')")
     public User getUserById(Long id) {
 
         return userRepository.findById(id)
@@ -54,7 +54,6 @@ public class UserService {
     // GET USER BY USERNAME
     // =========================
 
-    @PreAuthorize("hasRole('ADMIN')")
     public User getUserByUsername(String username) {
 
         return userRepository.findByUsername(username)
@@ -69,7 +68,7 @@ public class UserService {
     // =========================
 
     @PreAuthorize("hasRole('ADMIN')")
-    public User updateUser(Long id, User user) {
+    public User updateUser(Long id, UpdateUserRequest request) {
 
         // 1. Check existing user
         User dbUser = userRepository.findById(id)
@@ -79,7 +78,7 @@ public class UserService {
                 ));
 
         // 2. Check username uniqueness
-        userRepository.findByUsername(user.getUsername())
+        userRepository.findByUsername(request.username())
                 .ifPresent(existingUser -> {
 
                     if (!existingUser.getId().equals(id)) {
@@ -91,17 +90,17 @@ public class UserService {
                 });
 
         // 3. Update username
-        dbUser.setUsername(user.getUsername());
+        dbUser.setUsername(request.username());
 
         // 4. Update role
-        dbUser.setRole(user.getRole());
+        dbUser.setRole(request.role());
 
         // 5. Update password only if provided
-        if (user.getPassword() != null &&
-                !user.getPassword().isBlank()) {
+        if (request.password() != null &&
+                !request.password().isBlank()) {
 
             dbUser.setPassword(
-                    passwordEncoder.encode(user.getPassword())
+                    passwordEncoder.encode(request.password())
             );
         }
 

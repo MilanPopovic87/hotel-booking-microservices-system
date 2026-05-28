@@ -1,0 +1,81 @@
+<h2>Users</h2>
+<button mat-raised-button color="primary" (click)="openUserDialog()">Add User</button>
+<table mat-table [dataSource]="users()" class="full-width">
+
+    <!-- Columns -->
+    <ng-container matColumnDef="id">
+        <th mat-header-cell *matHeaderCellDef>ID</th>
+        <td mat-cell *matCellDef="let user">{{ user.id }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="username">
+        <th mat-header-cell *matHeaderCellDef>Username</th>
+        <td mat-cell *matCellDef="let user">{{ user.username }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="role">
+        <th mat-header-cell *matHeaderCellDef>Role</th>
+        <td mat-cell *matCellDef="let user">{{ user.role }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>Actions</th>
+        <td mat-cell *matCellDef="let user">
+            <button mat-icon-button color="primary" (click)="openUserDialog(user)">
+                <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" (click)="deleteUser(user)">
+                <mat-icon>delete</mat-icon>
+            </button>
+        </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedUserColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedUserColumns;"></tr>
+</table>
+
+<h2>Rooms</h2>
+<button mat-raised-button color="primary" (click)="openRoomDialog()">Add Room</button>
+<table mat-table [dataSource]="rooms()" class="full-width">
+
+    <!-- Columns -->
+    <ng-container matColumnDef="id">
+        <th mat-header-cell *matHeaderCellDef>ID</th>
+        <td mat-cell *matCellDef="let room">{{ room.id }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef>Name</th>
+        <td mat-cell *matCellDef="let room">{{ room.name }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="type">
+        <th mat-header-cell *matHeaderCellDef>Type</th>
+        <td mat-cell *matCellDef="let room">{{ room.type }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="price">
+        <th mat-header-cell *matHeaderCellDef>Price</th>
+        <td mat-cell *matCellDef="let room">{{ room.price }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="available">
+        <th mat-header-cell *matHeaderCellDef>Available</th>
+        <td mat-cell *matCellDef="let room">{{ room.available ? 'Yes' : 'No' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>Actions</th>
+        <td mat-cell *matCellDef="let room">
+            <button mat-icon-button color="primary" (click)="openRoomDialog(room)">
+                <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" (click)="deleteRoom(room)">
+                <mat-icon>delete</mat-icon>
+            </button>
+        </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedRoomColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedRoomColumns;"></tr>
+</table>

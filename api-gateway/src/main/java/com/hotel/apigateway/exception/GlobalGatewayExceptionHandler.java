@@ -18,7 +18,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 
 @Component
-@Order(Ordered.HIGHEST_PRECEDENCE)  // handler runs before default Spring handler
+@Order(Ordered.HIGHEST_PRECEDENCE)
 public class GlobalGatewayExceptionHandler
         implements ErrorWebExceptionHandler {
 
@@ -30,14 +30,16 @@ public class GlobalGatewayExceptionHandler
         ServerHttpResponse response = exchange.getResponse();
 
         /*
-         * If response is already committed,
-         * we cannot modify it anymore.
+         * Response already sent
          */
         if (response.isCommitted()) {
             return Mono.error(ex);
         }
 
         HttpStatus status = determineStatus(ex);
+
+        String errorCode = determineErrorCode(status);
+        String message = determineMessage(status);
 
         response.setStatusCode(status);
         response.getHeaders()
@@ -48,6 +50,7 @@ public class GlobalGatewayExceptionHandler
                   "timestamp": "%s",
                   "status": %d,
                   "error": "%s",
+                  "code": "%s",
                   "message": "%s",
                   "path": "%s"
                 }
@@ -55,7 +58,8 @@ public class GlobalGatewayExceptionHandler
                 LocalDateTime.now(),
                 status.value(),
                 status.getReasonPhrase(),
-                determineMessage(status),
+                errorCode,
+                message,
                 exchange.getRequest().getPath()
         );
 
@@ -85,6 +89,27 @@ public class GlobalGatewayExceptionHandler
          * Fallback
          */
         return HttpStatus.INTERNAL_SERVER_ERROR;
+    }
+
+    private String determineErrorCode(HttpStatus status) {
+
+        return switch (status) {
+
+            case UNAUTHORIZED ->
+                    "AUTHENTICATION_REQUIRED";
+
+            case FORBIDDEN ->
+                    "ACCESS_DENIED";
+
+            case NOT_FOUND ->
+                    "ROUTE_NOT_FOUND";
+
+            case SERVICE_UNAVAILABLE ->
+                    "SERVICE_UNAVAILABLE";
+
+            default ->
+                    "UNEXPECTED_GATEWAY_ERROR";
+        };
     }
 
     private String determineMessage(HttpStatus status) {

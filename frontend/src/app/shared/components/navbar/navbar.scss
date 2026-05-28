@@ -1,0 +1,43 @@
+mat-toolbar {
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+
+  .logo-welcome {
+    display: flex;
+    align-items: center;
+    gap: 2rem; // responsive spacing between logo and welcome text
+  }
+
+  .logo {
+    font-size: 1.2rem;
+    font-weight: bold;
+  }
+
+  .welcome {
+    font-weight: 500;
+    opacity: 0.9;
+  }
+
+  .spacer {
+    flex: 1 1 auto; // pushes nav links and buttons to the right
+  }
+
+  a.mat-button {
+    color: #e5e7eb;
+    text-decoration: none;
+
+    &.active {
+      font-weight: bold;
+      text-decoration: underline;
+    }
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+  }
+
+  button.mat-button {
+    color: #e5e7eb;
+  }
+}

@@ -1,0 +1,54 @@
+<h2 mat-dialog-title>{{ data.user ? 'Edit User' : 'Add User' }}</h2>
+
+<form [formGroup]="userForm" (ngSubmit)="save()">
+    <mat-dialog-content>
+
+        <!-- Username -->
+        <mat-form-field appearance="fill" class="full-width">
+            <mat-label>Username</mat-label>
+            <input matInput formControlName="username" />
+
+            <!-- Required validation -->
+            <mat-error *ngIf="userForm.get('username')?.hasError('required') && userForm.get('username')?.touched">
+                Username is required
+            </mat-error>
+
+            <!-- Backend error (username already exists) -->
+            <mat-error *ngIf="userForm.get('username')?.hasError('exists')">
+                Username already exists
+            </mat-error>
+        </mat-form-field>
+
+        <!-- Password -->
+        <mat-form-field appearance="fill" class="full-width">
+            <mat-label>Password</mat-label>
+            <input matInput type="password" formControlName="password" [required]="!data.user" />
+
+            <mat-hint *ngIf="data.user">
+                Leave empty to keep current password
+            </mat-hint>
+
+            <!-- Required validation (only for create mode) -->
+            <mat-error *ngIf="userForm.get('password')?.hasError('required') && userForm.get('password')?.touched">
+                Password is required
+            </mat-error>
+        </mat-form-field>
+
+        <!-- Role -->
+        <mat-form-field appearance="fill" class="full-width">
+            <mat-label>Role</mat-label>
+            <mat-select formControlName="role">
+                <mat-option value="USER">USER</mat-option>
+                <mat-option value="ADMIN">ADMIN</mat-option>
+            </mat-select>
+        </mat-form-field>
+
+    </mat-dialog-content>
+
+    <mat-dialog-actions align="end">
+        <button mat-button type="button" (click)="cancel()">Cancel</button>
+        <button mat-raised-button color="primary" type="submit">
+            {{ data.user ? 'Update' : 'Add' }}
+        </button>
+    </mat-dialog-actions>
+</form>

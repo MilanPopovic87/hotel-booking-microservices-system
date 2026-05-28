@@ -1,0 +1,23 @@
+<div class="chat-container">
+  <h2>Hotel AI Assistant</h2>
+
+  <div class="messages">
+    <div *ngFor="let msg of messages" [ngClass]="{ 'user-msg': msg.user, 'ai-msg': !msg.user }">
+      <strong *ngIf="msg.user">You:</strong>
+      <strong *ngIf="!msg.user">AI:</strong>
+      {{ msg.text }}
+    </div>
+  </div>
+
+  <form (ngSubmit)="sendMessage()">
+    <input
+      type="text"
+      [(ngModel)]="inputMessage"
+      placeholder="Ask me something..."
+      name="message"
+      required
+      autocomplete="off"
+    />
+    <button type="submit" [disabled]="!inputMessage.trim()">Send</button>
+  </form>
+</div>

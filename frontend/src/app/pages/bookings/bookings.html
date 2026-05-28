@@ -1,0 +1,77 @@
+<h2>Create Booking</h2>
+
+<!-- Selected room info -->
+<mat-card *ngIf="room() as r" class="room-info">
+    <mat-card-title>{{ r.name }}</mat-card-title>
+    <mat-card-content>
+        <p>Type: {{ r.type }}</p>
+        <p>Price: {{ r.price }} €</p>
+        <p>Status: {{ r.available ? 'Available' : 'Booked' }}</p>
+    </mat-card-content>
+</mat-card>
+
+<div class="booking-form">
+    <p><strong>Room ID:</strong> {{ newBooking().roomId }}</p>
+
+    <p><strong>User:</strong> {{ userService.getCurrentUser()?.username }}</p>
+
+    <mat-form-field appearance="fill">
+        <mat-label>Check-in Date</mat-label>
+        <input matInput type="date" [ngModel]="newBooking().checkInDate" (ngModelChange)="updateCheckInDate($event)" />
+    </mat-form-field>
+
+    <mat-form-field appearance="fill">
+        <mat-label>Check-out Date</mat-label>
+        <input matInput type="date" [ngModel]="newBooking().checkOutDate"
+            (ngModelChange)="updateCheckOutDate($event)" />
+    </mat-form-field>
+
+    <div *ngIf="errorMessage()" class="error">
+        {{ errorMessage() }}
+    </div>
+
+    <div *ngIf="successMessage()" class="success">
+        {{ successMessage() }}
+    </div>
+
+    <button mat-raised-button color="primary" (click)="createBooking()" [disabled]="room() && !room()!.available">
+        Create Booking
+    </button>
+</div>
+
+<hr />
+
+<h2>Bookings</h2>
+
+<div *ngIf="loading()" class="loading">Loading bookings...</div>
+
+<div *ngIf="loadError()" class="error">
+    {{ loadError() }}
+</div>
+
+<div *ngIf="!loading() && bookings().length === 0" class="no-bookings">
+    No bookings found.
+</div>
+
+<div class="bookings-grid" *ngIf="bookings().length > 0">
+    <mat-card class="booking-card" *ngFor="let booking of bookings(); trackBy: trackById">
+        <mat-card-header>
+            <mat-card-title>Booking #{{ booking.id }}</mat-card-title>
+            <mat-card-subtitle>
+                User: {{ booking.username }}
+            </mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+            <p>Room: {{ booking.roomName }}</p>
+            <p>Check-in: {{ booking.checkInDate }}</p>
+            <p>Check-out: {{ booking.checkOutDate }}</p>
+        </mat-card-content>
+
+        <mat-card-actions>
+            <button mat-raised-button color="warn" (click)="deleteBooking(booking.id!)">
+                Cancel
+            </button>
+        </mat-card-actions>
+    </mat-card>
+</div>

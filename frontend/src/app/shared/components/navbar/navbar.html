@@ -1,0 +1,35 @@
+<mat-toolbar color="primary">
+  <div class="logo-welcome">
+    <span class="logo">Hotel Inventory</span>
+
+    <!-- Show username if logged in -->
+    <span *ngIf="userService.isLoggedIn()" class="welcome">
+      Hello, {{ userService.getCurrentUser()?.username }}
+    </span>
+  </div>
+
+  <span class="spacer"></span>
+
+  <a
+    mat-button
+    routerLink="/"
+    routerLinkActive="active"
+    [routerLinkActiveOptions]="{ exact: true }"
+  >
+    Rooms
+  </a>
+  <a mat-button routerLink="/bookings" routerLinkActive="active"> Bookings </a>
+  <a *ngIf="userService.isAdmin()" mat-button routerLink="/admin" routerLinkActive="active">
+    Admin
+  </a>
+
+  <a mat-button routerLink="/chat" routerLinkActive="active"> AI Chat </a>
+
+  <!-- Show login only if NOT logged in -->
+  <a *ngIf="!userService.isLoggedIn()" mat-button routerLink="/login" routerLinkActive="active">
+    Login
+  </a>
+
+  <!-- Show logout only if logged in -->
+  <button *ngIf="userService.isLoggedIn()" mat-button (click)="logout()">Logout</button>
+</mat-toolbar>

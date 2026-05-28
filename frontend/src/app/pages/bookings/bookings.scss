@@ -1,0 +1,76 @@
+/* Grid for bookings list */
+.bookings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+/* Individual booking card */
+.booking-card {
+  padding: 0.5rem;
+  transition: transform 0.2s;
+  &:hover {
+    transform: scale(1.02);
+  }
+}
+
+/* Loading, no bookings, and error messages */
+.loading,
+.no-bookings,
+.error {
+  font-style: italic;
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.error {
+  color: red;
+}
+
+/* ---- Create Booking Form ---- */
+.booking-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* two columns on desktop */
+  gap: 1rem;
+  margin-bottom: 2rem;
+
+  mat-form-field {
+    width: 100%;
+  }
+
+  button {
+    grid-column: span 2; /* button spans both columns */
+    justify-self: start;
+    margin-top: 1rem;
+  }
+}
+
+/* ---- Selected Room Info ---- */
+.room-info {
+  margin-bottom: 2rem;
+  background-color: #f5f7fa;
+  border-left: 4px solid #3f51b5;
+
+  mat-card-title {
+    font-weight: 600;
+    font-size: 1.1rem;
+  }
+
+  mat-card-content {
+    p {
+      margin: 0.25rem 0;
+    }
+  }
+}
+
+/* Responsive for mobile */
+@media (max-width: 600px) {
+  .booking-form {
+    grid-template-columns: 1fr; /* stack fields */
+    button {
+      grid-column: span 1;
+      width: 100%;
+    }
+  }
+}

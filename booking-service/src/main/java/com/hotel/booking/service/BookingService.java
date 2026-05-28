@@ -1,7 +1,9 @@
 package com.hotel.booking.service;
 
-import com.hotel.booking.dto.BookingRequestDTO;
+import com.hotel.booking.dto.BookingRequest;
+import com.hotel.booking.dto.BookingResponse;
 import com.hotel.booking.entity.Booking;
+import com.hotel.booking.mapper.BookingMapper;
 import com.hotel.booking.repository.BookingRepository;
 import com.hotel.booking.security.CustomUserPrincipal;
 import org.springframework.http.HttpStatus;
@@ -18,43 +20,58 @@ import java.util.List;
 public class BookingService {
 
     private final BookingRepository bookingRepository;
+    private final BookingMapper bookingMapper;
     private final RoomService roomService;
 
     public BookingService(
             BookingRepository bookingRepository,
+            BookingMapper bookingMapper,
             RoomService roomService
     ) {
         this.bookingRepository = bookingRepository;
+        this.bookingMapper = bookingMapper;
         this.roomService = roomService;
     }
 
     // ================= READ =================
 
     @PreAuthorize("hasRole('ADMIN')")
-    public List<Booking> getAllBookings() {
-        return bookingRepository.findAll();
+    public List<BookingResponse> getAllBookings() {
+
+        return bookingRepository.findAll()
+                .stream()
+                .map(bookingMapper::toResponse)
+                .toList();
     }
 
     @PreAuthorize("hasRole('ADMIN') or @bookingService.isOwner(#id, authentication.principal.id)")
-    public Booking getBookingById(Long id) {
-        return bookingRepository.findById(id)
+    public BookingResponse getBookingById(Long id) {
+        Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Booking not found"
                 ));
+        return bookingMapper.toResponse(booking);
     }
 
-    public List<Booking> getMyBookings(Authentication authentication) {
+    public List<BookingResponse> getMyBookings(Authentication authentication) {
 
         CustomUserPrincipal user =
                 (CustomUserPrincipal) authentication.getPrincipal();
 
-        return bookingRepository.findByUserId(user.getId());
+        return bookingRepository.findByUserId(user.getId())
+                .stream()
+                .map(bookingMapper::toResponse)
+                .toList();
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    public List<Booking> getBookingsByRoomId(Long roomId) {
-        return bookingRepository.findByRoomId(roomId);
+    public List<BookingResponse> getBookingsByRoomId(Long roomId) {
+
+        return bookingRepository.findByRoomId(roomId)
+                .stream()
+                .map(bookingMapper::toResponse)
+                .toList();
     }
 
     public boolean existsByUserId(Long userId) {
@@ -69,7 +86,7 @@ public class BookingService {
      */
 
     @Transactional
-    public Booking createBooking(BookingRequestDTO dto, Authentication authentication) {
+    public BookingResponse createBooking(BookingRequest dto, Authentication authentication) {
 
         Long roomId = dto.getRoomId();
         roomService.getRoomById(roomId);  // validate room exists
@@ -89,7 +106,8 @@ public class BookingService {
         booking.setCheckInDate(dto.getCheckInDate());
         booking.setCheckOutDate(dto.getCheckOutDate());
 
-        return bookingRepository.save(booking);
+        Booking savedBooking = bookingRepository.save(booking);
+        return bookingMapper.toResponse(savedBooking);
     }
 
     // ================= UPDATE =================
@@ -99,9 +117,13 @@ public class BookingService {
      */
     @PreAuthorize("hasRole('ADMIN') or @bookingService.isOwner(#id,  authentication.principal.id)")
     @Transactional
-    public Booking updateBooking(Long id, BookingRequestDTO dto) {
+    public BookingResponse updateBooking(Long id, BookingRequest dto) {
 
-        Booking booking = getBookingById(id);
+        Booking booking = bookingRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Booking not found"
+                ));
 
         Long roomId = dto.getRoomId();
         roomService.getRoomById(roomId);  // validate room exists
@@ -114,7 +136,8 @@ public class BookingService {
         booking.setCheckInDate(dto.getCheckInDate());
         booking.setCheckOutDate(dto.getCheckOutDate());
 
-        return bookingRepository.save(booking);
+        Booking updatedBooking = bookingRepository.save(booking);
+        return bookingMapper.toResponse(updatedBooking);
     }
 
     // ================= DELETE =================

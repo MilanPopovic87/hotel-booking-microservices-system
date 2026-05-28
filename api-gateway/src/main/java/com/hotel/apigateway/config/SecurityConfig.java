@@ -3,6 +3,7 @@ package com.hotel.apigateway.config;
 import com.hotel.apigateway.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
@@ -25,11 +26,17 @@ public class SecurityConfig {
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
 
                 .authorizeExchange(exchange -> exchange
+
+                        // allow preflight requests
+                        .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
                         .pathMatchers("/api/auth/**").permitAll()
+                        .pathMatchers("/api/rooms/**").permitAll()
+
                         .anyExchange().authenticated()
                 )
 
-                .addFilterAt(
+                .addFilterBefore(
                         jwtAuthenticationFilter,
                         SecurityWebFiltersOrder.AUTHENTICATION
                 )

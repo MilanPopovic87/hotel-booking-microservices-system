@@ -40,6 +40,12 @@ public class SecurityConfig {
                         // Public endpoints (login/register)
                         .requestMatchers("/api/auth/**").permitAll()
 
+                        // Internal microservice communication
+                        .requestMatchers("/api/users/internal/**").permitAll()
+
+                        // Any authenticated user can access their own profile
+                        .requestMatchers("/api/users/me").authenticated()
+
 
                         // Users: only ADMIN can manage users
                         .requestMatchers("/api/users/**").hasRole("ADMIN")

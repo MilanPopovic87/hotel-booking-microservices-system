@@ -1,0 +1,25 @@
+.room-card {
+  background: #f9f9f9;
+  border-radius: 8px;
+  transition: transform 0.2s;
+  &:hover {
+    transform: scale(1.02);
+  }
+}
+
+.rooms-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.available {
+  color: green;
+  font-weight: bold;
+}
+
+.booked {
+  color: red;
+  font-weight: bold;
+}
