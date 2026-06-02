@@ -5,6 +5,7 @@ import com.hotel.userservice.dto.LoginRequest;
 import com.hotel.userservice.dto.RegisterRequest;
 import com.hotel.userservice.service.AuthService;
 import jakarta.validation.Valid;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -21,8 +22,8 @@ public class AuthController {
     // REGISTER
     // ------------------------
     @PostMapping("/register")
-    public void register(@Valid @RequestBody RegisterRequest request) {
-        authService.register(request);
+    public void register(@Valid @RequestBody RegisterRequest request, Authentication authentication) {
+        authService.register(request, authentication);
     }
 
     // ------------------------

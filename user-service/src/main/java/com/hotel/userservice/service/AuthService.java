@@ -1,18 +1,24 @@
 package com.hotel.userservice.service;
 
-import com.hotel.userservice.dto.AuthResponse;
-import com.hotel.userservice.dto.LoginRequest;
-import com.hotel.userservice.dto.RegisterRequest;
+import com.hotel.userservice.client.AuditClient;
+import com.hotel.userservice.dto.*;
 import com.hotel.userservice.entity.Role;
 import com.hotel.userservice.entity.User;
 import com.hotel.userservice.repository.UserRepository;
+import com.hotel.userservice.security.CustomUserPrincipal;
 import com.hotel.userservice.security.JwtService;
 import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class AuthService {
@@ -20,14 +26,19 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final AuditClient auditClient;
+    private static final Logger log =
+            LoggerFactory.getLogger(AuthService.class);
 
     public AuthService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
-                       JwtService jwtService) {
+                       JwtService jwtService,
+                       AuditClient auditClient) {
 
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.auditClient = auditClient;
     }
 
     @PostConstruct
@@ -47,7 +58,7 @@ public class AuthService {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    public void register(RegisterRequest request) {
+    public void register(RegisterRequest request, Authentication authentication) {
 
         userRepository.findByUsername(request.username())
                 .ifPresent(user -> {
@@ -57,13 +68,39 @@ public class AuthService {
                     );
                 });
 
-        User user = new User();
+        User newUser = new User();
 
-        user.setUsername(request.username());
-        user.setPassword(passwordEncoder.encode(request.password()));
-        user.setRole(Role.USER);
+        newUser.setUsername(request.username());
+        newUser.setPassword(passwordEncoder.encode(request.password()));
+        newUser.setRole(Role.USER);
 
-        userRepository.save(user);
+        User savedUser = userRepository.save(newUser);
+
+        // Send audit event
+        CustomUserPrincipal admin =
+                (CustomUserPrincipal) authentication.getPrincipal();
+
+        Map<String, Object> payload = Map.of(
+                "username", savedUser.getUsername(),
+                "role", savedUser.getRole().name()
+        );
+
+        AuditEventRequest auditEvent = new AuditEventRequest(
+                UUID.randomUUID(),
+                AuditEventType.USER_REGISTERED,
+                "user-service",
+                admin.getUsername(),
+                "USER",
+                savedUser.getId(),
+                payload,
+                "User registered successfully"
+        );
+
+        try {
+            auditClient.sendAuditEvent(auditEvent);
+        } catch (Exception e) {
+            log.error("Failed to send audit event for user {}", savedUser.getId(), e);
+        }
     }
 
     public AuthResponse login(LoginRequest request) {

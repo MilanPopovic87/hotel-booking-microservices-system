@@ -91,11 +91,12 @@ public class UserController {
     @PutMapping("/{id}")
     public UserResponse updateUser(
             @PathVariable Long id,
-            @RequestBody UpdateUserRequest request
+            @RequestBody UpdateUserRequest request,
+            Authentication authentication
     ) {
 
         return mapToResponse(
-                userService.updateUser(id, request)
+                userService.updateUser(id, request, authentication)
         );
     }
 
@@ -103,7 +104,8 @@ public class UserController {
     // DELETE USER (ADMIN ONLY)
     // =========================
     @DeleteMapping("/{id}")
-    public void deleteUser(@PathVariable Long id) {
-        userService.deleteUser(id);
+    public void deleteUser(@PathVariable Long id,  Authentication authentication) {
+
+        userService.deleteUser(id, authentication);
     }
 }

@@ -57,13 +57,14 @@ public class BookingController {
     // Update a booking
     // Reserved for future admin booking edits
     @PutMapping("/{id}")
-    public BookingResponse updateBooking(@PathVariable Long id, @RequestBody BookingRequest dto) {
-        return bookingService.updateBooking(id, dto);
+    public BookingResponse updateBooking(@PathVariable Long id, @RequestBody BookingRequest dto,
+                                         Authentication authentication) {
+        return bookingService.updateBooking(id, dto, authentication);
     }
 
     // Delete a booking
     @DeleteMapping("/{id}")
-    public void deleteBooking(@PathVariable Long id) {
-        bookingService.deleteBooking(id);
+    public void deleteBooking(@PathVariable Long id, Authentication authentication) {
+        bookingService.deleteBooking(id,  authentication);
     }
 }

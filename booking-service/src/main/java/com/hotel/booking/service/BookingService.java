@@ -1,11 +1,17 @@
 package com.hotel.booking.service;
 
+import com.hotel.booking.client.AuditClient;
+import com.hotel.booking.dto.AuditEventRequest;
+import com.hotel.booking.dto.AuditEventType;
 import com.hotel.booking.dto.BookingRequest;
 import com.hotel.booking.dto.BookingResponse;
 import com.hotel.booking.entity.Booking;
+import com.hotel.booking.entity.Room;
 import com.hotel.booking.mapper.BookingMapper;
 import com.hotel.booking.repository.BookingRepository;
 import com.hotel.booking.security.CustomUserPrincipal;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -15,6 +21,8 @@ import org.springframework.security.core.Authentication;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class BookingService {
@@ -22,15 +30,20 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final BookingMapper bookingMapper;
     private final RoomService roomService;
+    private final AuditClient auditClient;
+    private static final Logger log =
+            LoggerFactory.getLogger(BookingService.class);
 
     public BookingService(
             BookingRepository bookingRepository,
             BookingMapper bookingMapper,
-            RoomService roomService
+            RoomService roomService,
+            AuditClient auditClient
     ) {
         this.bookingRepository = bookingRepository;
         this.bookingMapper = bookingMapper;
         this.roomService = roomService;
+        this.auditClient = auditClient;
     }
 
     // ================= READ =================
@@ -89,7 +102,7 @@ public class BookingService {
     public BookingResponse createBooking(BookingRequest dto, Authentication authentication) {
 
         Long roomId = dto.getRoomId();
-        roomService.getRoomById(roomId);  // validate room exists
+        Room room = roomService.getRoomById(roomId);  // validate room exists
 
         CustomUserPrincipal user =
                 (CustomUserPrincipal) authentication.getPrincipal();
@@ -107,6 +120,32 @@ public class BookingService {
         booking.setCheckOutDate(dto.getCheckOutDate());
 
         Booking savedBooking = bookingRepository.save(booking);
+
+        // Send audit event
+        Map<String, Object> payload = Map.of(
+                "roomName", room.getName(),
+                "checkInDate", dto.getCheckInDate(),
+                "checkOutDate", dto.getCheckOutDate(),
+                "price", room.getPrice()
+        );
+
+        AuditEventRequest auditEvent = new AuditEventRequest(
+                UUID.randomUUID(),
+                AuditEventType.BOOKING_CREATED,
+                "booking-service",
+                user.getUsername(),
+                "BOOKING",
+                savedBooking.getId(),
+                payload,
+                "Booking created successfully"
+        );
+
+        try {
+            auditClient.sendAuditEvent(auditEvent);
+        } catch (Exception e) {
+            log.error("Failed to send audit event for booking {}", savedBooking.getId(), e);
+        }
+
         return bookingMapper.toResponse(savedBooking);
     }
 
@@ -117,7 +156,7 @@ public class BookingService {
      */
     @PreAuthorize("hasRole('ADMIN') or @bookingService.isOwner(#id,  authentication.principal.id)")
     @Transactional
-    public BookingResponse updateBooking(Long id, BookingRequest dto) {
+    public BookingResponse updateBooking(Long id, BookingRequest dto, Authentication authentication) {
 
         Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -126,7 +165,7 @@ public class BookingService {
                 ));
 
         Long roomId = dto.getRoomId();
-        roomService.getRoomById(roomId);  // validate room exists
+        Room room = roomService.getRoomById(roomId);  // validate room exists
 
         validateBookingDates(dto.getCheckInDate(), dto.getCheckOutDate());
 
@@ -137,6 +176,35 @@ public class BookingService {
         booking.setCheckOutDate(dto.getCheckOutDate());
 
         Booking updatedBooking = bookingRepository.save(booking);
+
+        // Send audit event
+        CustomUserPrincipal user =
+                (CustomUserPrincipal) authentication.getPrincipal();
+
+        Map<String, Object> payload = Map.of(
+                "roomName", room.getName(),
+                "checkInDate", dto.getCheckInDate(),
+                "checkOutDate", dto.getCheckOutDate(),
+                "price", room.getPrice()
+        );
+
+        AuditEventRequest auditEvent = new AuditEventRequest(
+                UUID.randomUUID(),
+                AuditEventType.BOOKING_UPDATED,
+                "booking-service",
+                user.getUsername(),
+                "BOOKING",
+                updatedBooking.getId(),
+                payload,
+                "Booking updated successfully"
+        );
+
+        try {
+            auditClient.sendAuditEvent(auditEvent);
+        } catch (Exception e) {
+            log.error("Failed to send audit event for booking {}", updatedBooking.getId(), e);
+        }
+
         return bookingMapper.toResponse(updatedBooking);
     }
 
@@ -147,8 +215,45 @@ public class BookingService {
      * If booking does not exist, operation is silently ignored.
      */
     @PreAuthorize("hasRole('ADMIN') or @bookingService.isOwner(#id, authentication.principal.id)")
-    public void deleteBooking(Long id) {
-        bookingRepository.deleteById(id);
+    @Transactional
+    public void deleteBooking(Long id, Authentication authentication) {
+
+        Booking booking = bookingRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Booking not found"
+                ));
+
+        Room room = roomService.getRoomById(booking.getRoomId());
+
+        CustomUserPrincipal user =
+                (CustomUserPrincipal) authentication.getPrincipal();
+
+        Map<String, Object> payload = Map.of(
+                "roomName", room.getName(),
+                "checkInDate", booking.getCheckInDate(),
+                "checkOutDate", booking.getCheckOutDate(),
+                "price", room.getPrice()
+        );
+
+        bookingRepository.delete(booking);
+
+        AuditEventRequest auditEvent = new AuditEventRequest(
+                UUID.randomUUID(),
+                AuditEventType.BOOKING_CANCELLED,
+                "booking-service",
+                user.getUsername(),
+                "BOOKING",
+                booking.getId(),
+                payload,
+                "Booking cancelled successfully"
+        );
+
+        try {
+            auditClient.sendAuditEvent(auditEvent);
+        } catch (Exception e) {
+            log.error("Failed to send audit event for booking {}", booking.getId(), e);
+        }
     }
 
     // ============================================================

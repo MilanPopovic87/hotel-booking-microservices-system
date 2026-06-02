@@ -1,16 +1,25 @@
 package com.hotel.userservice.service;
 
+import com.hotel.userservice.client.AuditClient;
 import com.hotel.userservice.client.BookingClient;
+import com.hotel.userservice.dto.AuditEventRequest;
+import com.hotel.userservice.dto.AuditEventType;
 import com.hotel.userservice.dto.UpdateUserRequest;
 import com.hotel.userservice.entity.User;
 import com.hotel.userservice.repository.UserRepository;
+import com.hotel.userservice.security.CustomUserPrincipal;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class UserService {
@@ -18,14 +27,19 @@ public class UserService {
     private final UserRepository userRepository;
     private final BookingClient bookingClient;
     private final PasswordEncoder passwordEncoder;
+    private final AuditClient auditClient;
+    private static final Logger log =
+            LoggerFactory.getLogger(UserService.class);
 
     public UserService(UserRepository userRepository,
                        BookingClient bookingClient,
-                       PasswordEncoder passwordEncoder) {
+                       PasswordEncoder passwordEncoder,
+                       AuditClient auditClient) {
 
         this.userRepository = userRepository;
         this.bookingClient = bookingClient;
         this.passwordEncoder = passwordEncoder;
+        this.auditClient = auditClient;
     }
 
     // =========================
@@ -68,19 +82,18 @@ public class UserService {
     // =========================
 
     @PreAuthorize("hasRole('ADMIN')")
-    public User updateUser(Long id, UpdateUserRequest request) {
+    public User updateUser(Long id, UpdateUserRequest request, Authentication authentication) {
 
-        // 1. Check existing user
+        //  Check existing user
         User dbUser = userRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "User not found"
                 ));
 
-        // 2. Check username uniqueness
+        //  Check username uniqueness
         userRepository.findByUsername(request.username())
                 .ifPresent(existingUser -> {
-
                     if (!existingUser.getId().equals(id)) {
                         throw new ResponseStatusException(
                                 HttpStatus.CONFLICT,
@@ -89,25 +102,43 @@ public class UserService {
                     }
                 });
 
-        // 3. Update username
+        //  Update fields
         dbUser.setUsername(request.username());
-
-        // 4. Update role
         dbUser.setRole(request.role());
 
-        // 5. Update password only if provided
-        if (request.password() != null &&
-                !request.password().isBlank()) {
-
-            dbUser.setPassword(
-                    passwordEncoder.encode(request.password())
-            );
+        if (request.password() != null && !request.password().isBlank()) {
+            dbUser.setPassword(passwordEncoder.encode(request.password()));
         }
 
-        // If password is null/blank -> keep old password
+        User updatedUser = userRepository.save(dbUser);
 
-        // 6. Save updated user
-        return userRepository.save(dbUser);
+        // ================= AUDIT =================
+        CustomUserPrincipal admin =
+                (CustomUserPrincipal) authentication.getPrincipal();
+
+        Map<String, Object> payload = Map.of(
+                "username", updatedUser.getUsername(),
+                "role", updatedUser.getRole().name()
+        );
+
+        AuditEventRequest auditEvent = new AuditEventRequest(
+                UUID.randomUUID(),
+                AuditEventType.USER_UPDATED,
+                "user-service",
+                admin.getUsername(),
+                "USER",
+                updatedUser.getId(),
+                payload,
+                "User updated successfully"
+        );
+
+        try {
+            auditClient.sendAuditEvent(auditEvent);
+        } catch (Exception e) {
+            log.error("Failed to send audit event for user {}", updatedUser.getId(), e);
+        }
+
+        return updatedUser;
     }
 
     // =========================
@@ -115,16 +146,16 @@ public class UserService {
     // =========================
 
     @PreAuthorize("hasRole('ADMIN')")
-    public void deleteUser(Long id) {
+    public void deleteUser(Long id, Authentication authentication) {
 
-        // 1. Check if user exists
+        //  Check if user exists
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "User not found"
                 ));
 
-        // 2. Check bookings via Booking Service
+        //  Check bookings via Booking Service
         Boolean hasBookings = bookingClient.hasBookings(id);
 
         if (Boolean.TRUE.equals(hasBookings)) {
@@ -134,8 +165,34 @@ public class UserService {
             );
         }
 
-        // 3. Delete user
+        // ================= AUDIT (snapshot BEFORE delete) =================
+        CustomUserPrincipal admin =
+                (CustomUserPrincipal) authentication.getPrincipal();
+
+        Map<String, Object> payload = Map.of(
+                "username", user.getUsername(),
+                "role", user.getRole().name()
+        );
+
+        //  Delete user
         userRepository.delete(user);
+
+        AuditEventRequest auditEvent = new AuditEventRequest(
+                UUID.randomUUID(),
+                AuditEventType.USER_DELETED,
+                "user-service",
+                admin.getUsername(),
+                "USER",
+                user.getId(),
+                payload,
+                "User deleted successfully"
+        );
+
+        try {
+            auditClient.sendAuditEvent(auditEvent);
+        } catch (Exception e) {
+            log.error("Failed to send audit event for user {}", user.getId(), e);
+        }
     }
 }
 
