@@ -46,7 +46,6 @@ public class UserService {
     // GET ALL USERS
     // =========================
 
-    @PreAuthorize("hasRole('ADMIN')")
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }

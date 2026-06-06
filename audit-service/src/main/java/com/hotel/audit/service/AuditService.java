@@ -1,11 +1,14 @@
 package com.hotel.audit.service;
 
 import com.hotel.audit.entity.AuditEvent;
+import com.hotel.audit.entity.AuditEventType;
 import com.hotel.audit.repository.AuditEventRepository;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class AuditService {
@@ -44,5 +47,22 @@ public class AuditService {
                             new IllegalStateException("Event conflict detected but not found: " + event.getEventId(), e)
                     );
         }
+    }
+
+    public List<AuditEvent> getRecentEvents(int limit) {
+
+        limit = Math.min(limit, 50);
+
+        return auditEventRepository.findAllByOrderByTimestampDesc( PageRequest.of(0, limit));
+
+    }
+
+    public List<AuditEvent> getEventsByType(AuditEventType eventType, int limit) {
+
+        limit = Math.min(limit, 50);
+
+        return auditEventRepository
+                .findByEventTypeOrderByTimestampDesc(eventType,  PageRequest.of(0, limit));
+
     }
 }

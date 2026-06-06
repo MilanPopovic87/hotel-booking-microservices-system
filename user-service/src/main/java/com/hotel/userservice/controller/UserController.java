@@ -36,7 +36,16 @@ public class UserController {
     // GET ALL USERS
     // =========================
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public List<UserResponse> getAllUsers() {
+        return userService.getAllUsers()
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    @GetMapping("/internal/all")
+    public List<UserResponse> getAllUsersInternal() {
         return userService.getAllUsers()
                 .stream()
                 .map(this::mapToResponse)

@@ -8,6 +8,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 @FeignClient(name = "audit-service", url = "http://localhost:8083")
 public interface AuditClient {
 
-    @PostMapping("/internal/audit")
+    @PostMapping("/api/audit/internal")
     void sendAuditEvent(@RequestBody AuditEventRequest request);
 }

@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: ai-chat-service
+
+  ai:
+    ollama:
+      base-url: http://localhost:11434
+
+      chat:
+        options:
+          model: qwen3:8b
+          temperature: 0.2
+
+server:
+  port: 8084
+
+services:
+  booking:
+    url: http://localhost:8082
+
+  user:
+    url: http://localhost:8081
+
+  audit:
+    url: http://localhost:8083

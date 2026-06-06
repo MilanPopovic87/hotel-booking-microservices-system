@@ -48,7 +48,6 @@ public class BookingService {
 
     // ================= READ =================
 
-    @PreAuthorize("hasRole('ADMIN')")
     public List<BookingResponse> getAllBookings() {
 
         return bookingRepository.findAll()
@@ -78,7 +77,6 @@ public class BookingService {
                 .toList();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     public List<BookingResponse> getBookingsByRoomId(Long roomId) {
 
         return bookingRepository.findByRoomId(roomId)

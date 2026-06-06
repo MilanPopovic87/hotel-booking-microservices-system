@@ -3,6 +3,7 @@ package com.hotel.booking.controller;
 import com.hotel.booking.dto.BookingRequest;
 import com.hotel.booking.dto.BookingResponse;
 import com.hotel.booking.service.BookingService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,7 +21,13 @@ public class BookingController {
 
     // Get all bookings
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public List<BookingResponse> getAllBookings() {
+        return bookingService.getAllBookings();
+    }
+
+    @GetMapping("/internal/all")
+    public List<BookingResponse> getAllBookingsInternal() {
         return bookingService.getAllBookings();
     }
 
@@ -38,7 +45,13 @@ public class BookingController {
 
     // Get bookings by room
     @GetMapping("/by-room/{roomId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public List<BookingResponse> getBookingsByRoom(@PathVariable Long roomId) {
+        return bookingService.getBookingsByRoomId(roomId);
+    }
+
+    @GetMapping("/internal/by-room/{roomId}")
+    public List<BookingResponse> getBookingsByRoomInternal(@PathVariable Long roomId) {
         return bookingService.getBookingsByRoomId(roomId);
     }
 
