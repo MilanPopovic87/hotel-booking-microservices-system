@@ -1,7 +1,7 @@
 // src/app/services/user.service.ts
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { API } from '../config/api.config';
 import { Router } from '@angular/router';
 import { ChatService } from './chat.service';
@@ -38,17 +38,19 @@ export class UserService {
     });
   }
 
-  handleLoginSuccess(res: AuthResponse) {
+  handleLoginSuccess(res: AuthResponse): Observable<UserResponse> {
     // save token
     localStorage.setItem('token', res.token);
 
     this.setupAutoLogout(res.token);
 
     // load current user from backend
-    this.getMe().subscribe((user) => {
-      this.currentUser.set(user);
-      localStorage.setItem('user', JSON.stringify(user));
-    });
+    return this.getMe().pipe(
+      tap((user) => {
+        this.currentUser.set(user);
+        localStorage.setItem('user', JSON.stringify(user));
+      }),
+    );
   }
 
   getMe(): Observable<UserResponse> {

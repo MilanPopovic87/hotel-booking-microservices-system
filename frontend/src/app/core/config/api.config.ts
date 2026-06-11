@@ -5,4 +5,5 @@ export const API = {
   USERS: `${environment.apiBaseUrl}/users`,
   ROOMS: `${environment.apiBaseUrl}/rooms`,
   BOOKINGS: `${environment.apiBaseUrl}/bookings`,
+  CHAT: `${environment.apiBaseUrl}/chat`,
 };

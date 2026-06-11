@@ -45,18 +45,40 @@ export class ChatComponent {
 
     this.chatService.sendMessage(message, token).subscribe({
       next: (res) => {
+        console.log('AI response:', res);
         // Replace ONLY this specific loading message
         const msgs = this.chatService.getMessages();
         const index = msgs.indexOf(loadingMsg);
         if (index !== -1) {
-          this.messages[index] = { user: false, text: res.response };
+          this.messages[index] = { user: false, text: res.answer };
         }
       },
-      error: () => {
+      error: (err) => {
         const msgs = this.chatService.getMessages();
         const index = msgs.indexOf(loadingMsg);
-        if (index !== -1) {
-          this.messages[index] = { user: false, text: 'AI service error.' };
+
+        if (index === -1) return;
+
+        switch (err.status) {
+          case 503:
+            this.messages[index] = {
+              user: false,
+              text: 'AI service is not enabled.',
+            };
+            break;
+
+          case 504:
+            this.messages[index] = {
+              user: false,
+              text: 'AI response timed out.',
+            };
+            break;
+
+          default:
+            this.messages[index] = {
+              user: false,
+              text: 'AI service error.',
+            };
         }
       },
     });

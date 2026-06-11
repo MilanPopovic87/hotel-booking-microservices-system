@@ -35,9 +35,12 @@ export class Login {
 
     this.userService.login(this.username, this.password).subscribe({
       next: (res) => {
-        this.userService.handleLoginSuccess(res); // stores token + user
-        form.resetForm();
-        this.router.navigateByUrl(this.redirectTo ?? '/');
+        this.userService.handleLoginSuccess(res).subscribe({
+          next: () => {
+            form.resetForm();
+            this.router.navigateByUrl(this.redirectTo ?? '/');
+          },
+        });
       },
       error: () => {
         this.error = 'Invalid credentials or user does not exist. Contact admin.';

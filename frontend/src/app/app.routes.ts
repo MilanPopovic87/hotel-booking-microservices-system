@@ -7,7 +7,6 @@ import { Login } from './pages/login/login';
 import { bookingGuard } from './core/guards/booking.guard';
 import { adminGuard } from './core/guards/admin.guard';
 import { ChatComponent } from './pages/chat/chat';
-import { chatGuard } from './core/guards/chat.guard';
 
 export const routes: Routes = [
   { path: '', component: Home },
@@ -27,7 +26,7 @@ export const routes: Routes = [
   {
     path: 'chat',
     component: ChatComponent,
-    canActivate: [chatGuard],
+    canActivate: [adminGuard],
   },
   { path: 'login', component: Login },
 

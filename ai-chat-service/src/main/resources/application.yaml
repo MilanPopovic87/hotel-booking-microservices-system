@@ -4,22 +4,22 @@ spring:
 
   ai:
     ollama:
-      base-url: http://localhost:11434
+      base-url: ${OLLAMA_URL:http://localhost:11434}
 
       chat:
         options:
-          model: qwen3:8b
-          temperature: 0.2
+          model: ${OLLAMA_MODEL:qwen3:4b}
+          temperature: ${OLLAMA_TEMPERATURE:0.2}
 
 server:
-  port: 8084
+  port: ${SERVER_PORT:8084}
 
 services:
   booking:
-    url: http://localhost:8082
+    url: ${BOOKING_SERVICE_URL:http://localhost:8082}
 
   user:
-    url: http://localhost:8081
+    url: ${USER_SERVICE_URL:http://localhost:8081}
 
   audit:
-    url: http://localhost:8083
+    url: ${AUDIT_SERVICE_URL:http://localhost:8083}

@@ -3,9 +3,9 @@ spring:
     name: user-service
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/userservice_db
-    username: postgres
-    password: 1234
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/userservice_db}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:1234}
     driver-class-name: org.postgresql.Driver
 
     hikari:
@@ -25,8 +25,15 @@ spring:
       mode: always
 
 server:
-  port: 8081
+  port: ${SERVER_PORT:8081}
 
 jwt:
-  secret: YourSuperSecretKeyAtLeast32CharsLong123!
-  expirationMinutes: 60
+  secret: ${JWT_SECRET:YourSuperSecretKeyAtLeast32CharsLong123!}
+  expirationMinutes: ${JWT_EXPIRATION_MINUTES:60}
+
+services:
+  booking:
+    url: ${BOOKING_SERVICE_URL:http://localhost:8082}
+
+  audit:
+    url: ${AUDIT_SERVICE_URL:http://localhost:8083}

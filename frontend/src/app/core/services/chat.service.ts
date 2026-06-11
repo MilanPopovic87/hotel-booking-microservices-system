@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
+import { API } from '../config/api.config';
 
 interface Message {
   user: boolean;
@@ -28,8 +29,8 @@ export class ChatService {
   }
 
   sendMessage(message: string, token: string) {
-    return this.http.post<{ response: string }>(
-      `${environment.apiBaseUrl}/chat`,
+    return this.http.post<{ answer: string }>(
+      API.CHAT,
       { message },
       {
         headers: { Authorization: `Bearer ${token}` },

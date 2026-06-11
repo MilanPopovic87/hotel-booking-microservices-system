@@ -23,7 +23,9 @@
     Admin
   </a>
 
-  <a mat-button routerLink="/chat" routerLinkActive="active"> AI Chat </a>
+  <a *ngIf="userService.isAdmin()" mat-button routerLink="/chat" routerLinkActive="active">
+    AI Chat
+  </a>
 
   <!-- Show login only if NOT logged in -->
   <a *ngIf="!userService.isLoggedIn()" mat-button routerLink="/login" routerLinkActive="active">
