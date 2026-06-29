@@ -41,8 +41,21 @@ export class UserDialog {
     private userService: UserService,
   ) {
     this.userForm = this.fb.group({
-      username: [data.user?.username || '', Validators.required],
-      password: ['', data.user ? [] : Validators.required],
+      username: [
+        data.user?.username || '',
+        [
+          Validators.required,
+          Validators.minLength(3),
+          Validators.maxLength(30),
+          Validators.pattern(/^[a-zA-Z0-9_]+$/),
+        ],
+      ],
+      password: [
+        '',
+        data.user
+          ? [Validators.minLength(8), Validators.maxLength(100)]
+          : [Validators.required, Validators.minLength(8), Validators.maxLength(100)],
+      ],
       role: [data.user?.role || 'USER', Validators.required],
     });
   }
@@ -55,8 +68,10 @@ export class UserDialog {
       role: formValue.role,
     };
 
-    if (formValue.password?.trim()) {
-      request.password = formValue.password;
+    const password = formValue.password?.trim();
+
+    if (password) {
+      request.password = password;
     }
 
     return this.userService.updateUser(this.data.user!.id, request);

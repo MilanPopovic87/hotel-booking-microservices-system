@@ -14,6 +14,27 @@
         Username is required
       </mat-error>
 
+      <!-- Min length -->
+      <mat-error
+        *ngIf="userForm.get('username')?.hasError('minlength') && userForm.get('username')?.touched"
+      >
+        Username must be at least 3 characters
+      </mat-error>
+
+      <!-- Max length -->
+      <mat-error
+        *ngIf="userForm.get('username')?.hasError('maxlength') && userForm.get('username')?.touched"
+      >
+        Username cannot exceed 30 characters
+      </mat-error>
+
+      <!-- Pattern -->
+      <mat-error
+        *ngIf="userForm.get('username')?.hasError('pattern') && userForm.get('username')?.touched"
+      >
+        Username can contain only letters, numbers and underscores
+      </mat-error>
+
       <!-- Backend error (username already exists) -->
       <mat-error *ngIf="userForm.get('username')?.hasError('exists')">
         Username already exists
@@ -23,7 +44,7 @@
     <!-- Password -->
     <mat-form-field appearance="fill" class="full-width">
       <mat-label>Password</mat-label>
-      <input matInput type="password" formControlName="password" [required]="!data.user" />
+      <input matInput type="password" formControlName="password" />
 
       <mat-hint *ngIf="data.user"> Leave empty to keep current password </mat-hint>
 
@@ -32,6 +53,20 @@
         *ngIf="userForm.get('password')?.hasError('required') && userForm.get('password')?.touched"
       >
         Password is required
+      </mat-error>
+
+      <!-- Min length -->
+      <mat-error
+        *ngIf="userForm.get('password')?.hasError('minlength') && userForm.get('password')?.touched"
+      >
+        Password must be at least 8 characters
+      </mat-error>
+
+      <!-- Max length -->
+      <mat-error
+        *ngIf="userForm.get('password')?.hasError('maxlength') && userForm.get('password')?.touched"
+      >
+        Password cannot exceed 100 characters
       </mat-error>
     </mat-form-field>
 
