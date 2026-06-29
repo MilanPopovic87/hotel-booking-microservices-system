@@ -24,6 +24,13 @@ spring:
     init:
       mode: always
 
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
 server:
   port: ${SERVER_PORT:8081}
 
@@ -34,6 +41,3 @@ jwt:
 services:
   booking:
     url: ${BOOKING_SERVICE_URL:http://localhost:8082}
-
-  audit:
-    url: ${AUDIT_SERVICE_URL:http://localhost:8083}

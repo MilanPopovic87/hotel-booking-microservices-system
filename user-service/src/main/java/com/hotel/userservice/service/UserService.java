@@ -1,11 +1,11 @@
 package com.hotel.userservice.service;
 
-import com.hotel.userservice.client.AuditClient;
 import com.hotel.userservice.client.BookingClient;
 import com.hotel.userservice.dto.AuditEventRequest;
 import com.hotel.userservice.dto.AuditEventType;
 import com.hotel.userservice.dto.UpdateUserRequest;
 import com.hotel.userservice.entity.User;
+import com.hotel.userservice.kafka.AuditEventProducer;
 import com.hotel.userservice.repository.UserRepository;
 import com.hotel.userservice.security.CustomUserPrincipal;
 import org.slf4j.Logger;
@@ -27,19 +27,19 @@ public class UserService {
     private final UserRepository userRepository;
     private final BookingClient bookingClient;
     private final PasswordEncoder passwordEncoder;
-    private final AuditClient auditClient;
+    private final AuditEventProducer auditEventProducer;
     private static final Logger log =
             LoggerFactory.getLogger(UserService.class);
 
     public UserService(UserRepository userRepository,
                        BookingClient bookingClient,
                        PasswordEncoder passwordEncoder,
-                       AuditClient auditClient) {
+                       AuditEventProducer auditEventProducer) {
 
         this.userRepository = userRepository;
         this.bookingClient = bookingClient;
         this.passwordEncoder = passwordEncoder;
-        this.auditClient = auditClient;
+        this.auditEventProducer = auditEventProducer;
     }
 
     // =========================
@@ -132,7 +132,7 @@ public class UserService {
         );
 
         try {
-            auditClient.sendAuditEvent(auditEvent);
+            auditEventProducer.send(auditEvent);
         } catch (Exception e) {
             log.error("Failed to send audit event for user {}", updatedUser.getId(), e);
         }
@@ -188,7 +188,7 @@ public class UserService {
         );
 
         try {
-            auditClient.sendAuditEvent(auditEvent);
+            auditEventProducer.send(auditEvent);
         } catch (Exception e) {
             log.error("Failed to send audit event for user {}", user.getId(), e);
         }

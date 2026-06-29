@@ -1,21 +1,22 @@
 # Hotel Booking Microservices System
 
-A full-stack hotel booking application built using a microservices architecture. The system consists of independent Spring Boot services, an Angular frontend, an API Gateway, PostgreSQL databases, and an optional AI assistant powered by Spring AI and Ollama.
+A full-stack hotel booking application built using a microservices architecture. The system consists of independent Spring Boot services, an Angular frontend, Spring Cloud Gateway, PostgreSQL databases, Apache Kafka for asynchronous event-driven communication, and an optional AI assistant powered by Spring AI and Ollama.
 
 ## Architecture
 
 ### Services
 
-| Service           | Responsibility                                     |
-| ----------------- | -------------------------------------------------- |
-| API Gateway       | Single entry point for frontend requests           |
-| User Service      | Authentication, authorization, and user management |
-| Booking Service   | Booking management and business rules              |
-| Audit Service     | Stores system events and audit logs                |
-| AI Chat Service   | AI assistant with access to system data            |
-| Frontend          | Angular web application                            |
-| PostgreSQL        | Persistent data storage                            |
-| Ollama (Optional) | Local LLM runtime for AI features                  |
+| Service           | Responsibility                                          |
+| ----------------- | ------------------------------------------------------- |
+| API Gateway       | Single entry point for frontend requests                |
+| User Service      | Authentication, authorization, and user management      |
+| Booking Service   | Booking management and business rules                   |
+| Audit Service     | Consumes audit events and stores audit logs             |
+| Apache Kafka      | Event streaming platform for asynchronous communication |
+| AI Chat Service   | AI assistant with access to system data                 |
+| Frontend          | Angular web application                                 |
+| PostgreSQL        | Persistent data storage                                 |
+| Ollama (Optional) | Local LLM runtime for AI features                       |
 
 ---
 
@@ -41,24 +42,27 @@ A full-stack hotel booking application built using a microservices architecture.
                              ▼            ▼             ▼
                 ┌───────────────┐ ┌───────────────┐ ┌───────────────┐
                 │ User Service  │ │Booking Service│ │AI Chat Service│
-                └───────┬───────┘ └───────┬───────┘ └───────┬───────┘
-                        │                 │                 │
-                        ▼                 ▼                 ▼
+                └───────┬───┬───┘ └────┬───┬──────┘ └───────┬───────┘
+                        │   │          │   │                │
+                        ▼   │          │   ▼                ▼
                ┌──────────────┐   ┌────────────┐   ┌────────────────┐
                │userservice_db│   │ booking_db │   │  Ollama (LLM)  │
                └──────────────┘   └────────────┘   └────────────────┘
-
-                       │                 │
-                       └────────┬────────┘
+                            │         │
+                            └────┬────┘
+                                 ▼
+                        ┌────────────────┐
+                        │  Apache Kafka  │
+                        │  audit-events  │
+                        └───────┬────────┘
                                 ▼
-                       ┌────────────────┐
-                       │ Audit Service  │
-                       └───────┬────────┘
-                               │
-                               ▼
-                       ┌────────────────┐
-                       │    audit_db    │
-                       └────────────────┘
+                        ┌────────────────┐
+                        │ Audit Service  │
+                        └───────┬────────┘
+                                ▼
+                        ┌────────────────┐
+                        │    audit_db    │
+                        └────────────────┘
 ```
 
 ### Request Flow
@@ -74,9 +78,10 @@ API Gateway
    └── AI Chat Service
 ```
 
-The API Gateway acts as the single entry point for all frontend requests.
+Client requests are routed through the API Gateway using REST APIs.
 
-Internal services communicate using REST APIs and OpenFeign clients.
+Internal service-to-service communication uses synchronous REST APIs via Spring Cloud OpenFeign when an immediate response is required. Business events (such as user registration, user updates, and booking creation) are published asynchronously to Apache Kafka, where the Audit Service consumes them and persists audit logs.
+
 
 ---
 
@@ -99,14 +104,15 @@ Internal services communicate using REST APIs and OpenFeign clients.
 
 ### Audit Service
 
-* Stores audit events
-* Tracks important system actions
-* Maintains system activity history
+* Consumes audit events from Apache Kafka
+* Stores immutable audit logs
+* Tracks important business events
+* Idempotent event processing
 * Passive service without business logic
 
 Examples:
 
-* User created
+* User registered
 * User updated
 * User deleted
 * Booking created
@@ -127,7 +133,8 @@ Examples:
 * Independent services
 * Clear service boundaries
 * API Gateway pattern
-* REST-based service communication
+* REST for synchronous client requests
+* Event-driven communication using Apache Kafka
 * AI service is read-only
 * Audit service is passive
 
@@ -172,6 +179,15 @@ Built with Angular and Angular Material.
 * User actions
 * System activity tracking
 
+### Event Streaming
+
+* Apache Kafka messaging
+* Event-driven architecture
+* Asynchronous audit processing
+* Kafka producers and consumers
+* Consumer groups
+* Idempotent event handling
+
 ---
 
 ## Database Design
@@ -200,13 +216,18 @@ Each service owns its own database and is responsible for its own data.
 * Spring Security
 * Spring Data JPA
 * Spring Cloud Gateway
-* OpenFeign
+* Spring Cloud OpenFeign
+* Spring for Apache Kafka
 * JWT Authentication
 * Spring AI
 
 ### Database
 
 * PostgreSQL
+
+### Messaging
+
+* Apache Kafka
 
 ### AI
 
@@ -240,8 +261,8 @@ Services:
 * ai-chat-service
 * api-gateway
 
-## Start the Application
-### Without AI
+### Start the Application
+#### Without AI
 
 ```bash
 docker compose up --build
@@ -249,13 +270,15 @@ docker compose up --build
 This starts:
 
 * PostgreSQL
+* Apache Kafka
+* Kafka UI
 * User Service
 * Booking Service
 * Audit Service
 * API Gateway
 * Frontend
 
-### With AI
+#### With AI
 
 ```bash
 docker compose --profile ai up --build
@@ -276,6 +299,7 @@ The AI model is downloaded automatically during startup.
 | ----------- | --------------------- |
 | Frontend    | http://localhost:3000 |
 | API Gateway | http://localhost:8080 |
+| Kafka UI    | http://localhost:8085 |
 
 ---
 
@@ -312,11 +336,16 @@ password
 * Microservices architecture
 * API Gateway pattern (Spring Cloud Gateway)
 * Database-per-service design
-* JWT authentication & authorization
-* Role-based access control
-* Feign clients for service communication
+* RESTful APIs
+* Synchronous service-to-service communication with Spring Cloud OpenFeign
+* Event-driven architecture with Apache Kafka
+* Asynchronous messaging
+* Kafka producers and consumers
+* Consumer groups
+* Idempotent event processing
+* JWT authentication and authorization
+* Role-based access control (RBAC)
 * Docker containerization
-* Optional AI integration (Ollama)
+* Optional AI integration (Spring AI + Ollama)
 
-```
 

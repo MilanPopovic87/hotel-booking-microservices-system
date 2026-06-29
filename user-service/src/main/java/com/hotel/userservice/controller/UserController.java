@@ -5,6 +5,7 @@ import com.hotel.userservice.dto.UserResponse;
 import com.hotel.userservice.entity.User;
 import com.hotel.userservice.security.CustomUserPrincipal;
 import com.hotel.userservice.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -100,7 +101,7 @@ public class UserController {
     @PutMapping("/{id}")
     public UserResponse updateUser(
             @PathVariable Long id,
-            @RequestBody UpdateUserRequest request,
+            @Valid @RequestBody UpdateUserRequest request,
             Authentication authentication
     ) {
 

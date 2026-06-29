@@ -1,9 +1,9 @@
 package com.hotel.userservice.service;
 
-import com.hotel.userservice.client.AuditClient;
 import com.hotel.userservice.dto.*;
 import com.hotel.userservice.entity.Role;
 import com.hotel.userservice.entity.User;
+import com.hotel.userservice.kafka.AuditEventProducer;
 import com.hotel.userservice.repository.UserRepository;
 import com.hotel.userservice.security.CustomUserPrincipal;
 import com.hotel.userservice.security.JwtService;
@@ -26,19 +26,19 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
-    private final AuditClient auditClient;
+    private final AuditEventProducer auditEventProducer;
     private static final Logger log =
             LoggerFactory.getLogger(AuthService.class);
 
     public AuthService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
                        JwtService jwtService,
-                       AuditClient auditClient) {
+                       AuditEventProducer auditEventProducer) {
 
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
-        this.auditClient = auditClient;
+        this.auditEventProducer = auditEventProducer;
     }
 
     @PostConstruct
@@ -97,7 +97,7 @@ public class AuthService {
         );
 
         try {
-            auditClient.sendAuditEvent(auditEvent);
+            auditEventProducer.send(auditEvent);
         } catch (Exception e) {
             log.error("Failed to send audit event for user {}", savedUser.getId(), e);
         }

@@ -1,12 +1,12 @@
 package com.hotel.booking.service;
 
-import com.hotel.booking.client.AuditClient;
 import com.hotel.booking.dto.AuditEventRequest;
 import com.hotel.booking.dto.AuditEventType;
 import com.hotel.booking.dto.BookingRequest;
 import com.hotel.booking.dto.BookingResponse;
 import com.hotel.booking.entity.Booking;
 import com.hotel.booking.entity.Room;
+import com.hotel.booking.kafka.AuditEventProducer;
 import com.hotel.booking.mapper.BookingMapper;
 import com.hotel.booking.repository.BookingRepository;
 import com.hotel.booking.security.CustomUserPrincipal;
@@ -30,7 +30,7 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final BookingMapper bookingMapper;
     private final RoomService roomService;
-    private final AuditClient auditClient;
+    private final AuditEventProducer auditEventProducer;
     private static final Logger log =
             LoggerFactory.getLogger(BookingService.class);
 
@@ -38,12 +38,12 @@ public class BookingService {
             BookingRepository bookingRepository,
             BookingMapper bookingMapper,
             RoomService roomService,
-            AuditClient auditClient
+            AuditEventProducer auditEventProducer
     ) {
         this.bookingRepository = bookingRepository;
         this.bookingMapper = bookingMapper;
         this.roomService = roomService;
-        this.auditClient = auditClient;
+        this.auditEventProducer = auditEventProducer;
     }
 
     // ================= READ =================
@@ -139,7 +139,7 @@ public class BookingService {
         );
 
         try {
-            auditClient.sendAuditEvent(auditEvent);
+            auditEventProducer.send(auditEvent);
         } catch (Exception e) {
             log.error("Failed to send audit event for booking {}", savedBooking.getId(), e);
         }
@@ -198,7 +198,7 @@ public class BookingService {
         );
 
         try {
-            auditClient.sendAuditEvent(auditEvent);
+            auditEventProducer.send(auditEvent);
         } catch (Exception e) {
             log.error("Failed to send audit event for booking {}", updatedBooking.getId(), e);
         }
@@ -248,7 +248,7 @@ public class BookingService {
         );
 
         try {
-            auditClient.sendAuditEvent(auditEvent);
+            auditEventProducer.send(auditEvent);
         } catch (Exception e) {
             log.error("Failed to send audit event for booking {}", booking.getId(), e);
         }
