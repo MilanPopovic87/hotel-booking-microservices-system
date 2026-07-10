@@ -1,0 +1,42 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ollama-model-pull
+
+spec:
+  backoffLimit: 3
+
+  template:
+    spec:
+      restartPolicy: Never
+
+      containers:
+        - name: model-pull
+
+          image: ollama/ollama:latest
+
+          env:
+            - name: OLLAMA_HOST
+              value: http://ollama:11434
+
+          envFrom:
+            - configMapRef:
+                name: ollama-config
+
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Waiting for Ollama..."
+
+              until ollama list >/dev/null 2>&1; do
+                sleep 2
+              done
+
+              echo "Ollama is ready."
+
+              echo "Pulling model: $OLLAMA_MODEL"
+
+              ollama pull "$OLLAMA_MODEL"
+
+              echo "Model downloaded successfully."

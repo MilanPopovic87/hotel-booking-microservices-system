@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ollama-config
+
+data:
+  OLLAMA_MODEL: qwen3:4b

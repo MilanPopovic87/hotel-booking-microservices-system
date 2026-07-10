@@ -57,7 +57,6 @@ services:
       DB_USERNAME: postgres
       DB_PASSWORD: 1234
       BOOKING_SERVICE_URL: http://booking-service:8082
-      AUDIT_SERVICE_URL: http://audit-service:8083
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     depends_on:
       - postgres
@@ -74,7 +73,6 @@ services:
       DB_USERNAME: postgres
       DB_PASSWORD: 1234
       USER_SERVICE_URL: http://user-service:8081
-      AUDIT_SERVICE_URL: http://audit-service:8083
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     depends_on:
       - postgres

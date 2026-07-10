@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: postgres-config
+
+data:
+  init.sql: |
+    CREATE DATABASE userservice_db;
+    CREATE DATABASE booking_db;
+    CREATE DATABASE audit_db;

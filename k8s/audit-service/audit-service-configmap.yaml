@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: audit-service-config
+
+data:
+  DB_URL: jdbc:postgresql://postgres:5432/audit_db
+
+  KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+
+  SERVER_PORT: "8083"

@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-chat-service
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: ai-chat-service
+
+  template:
+    metadata:
+      labels:
+        app: ai-chat-service
+
+    spec:
+      containers:
+        - name: ai-chat-service
+
+          image: ai-chat-service:latest
+          imagePullPolicy: Never
+
+          ports:
+            - containerPort: 8084
+
+          envFrom:
+            - configMapRef:
+                name: ai-chat-config

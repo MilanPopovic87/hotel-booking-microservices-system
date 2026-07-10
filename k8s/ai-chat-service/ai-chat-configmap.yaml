@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ai-chat-config
+
+data:
+  SERVER_PORT: "8084"
+
+  OLLAMA_URL: "http://ollama:11434"
+  OLLAMA_MODEL: "qwen3:4b"
+  OLLAMA_TEMPERATURE: "0.2"
+
+  BOOKING_SERVICE_URL: "http://booking-service:8082"
+  USER_SERVICE_URL: "http://user-service:8081"
+  AUDIT_SERVICE_URL: "http://audit-service:8083"

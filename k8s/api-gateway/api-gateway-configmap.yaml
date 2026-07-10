@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-gateway-config
+
+data:
+  USER_SERVICE_URL: http://user-service:8081
+  BOOKING_SERVICE_URL: http://booking-service:8082
+  AI_CHAT_SERVICE_URL: http://ai-chat-service:8084

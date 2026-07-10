@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: user-service-config
+
+data:
+  DB_URL: jdbc:postgresql://postgres:5432/userservice_db
+
+  BOOKING_SERVICE_URL: http://booking-service:8082
+
+  KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+
+  SERVER_PORT: "8081"
