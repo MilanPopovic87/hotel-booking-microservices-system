@@ -2,6 +2,16 @@
 
 A full-stack hotel booking application built using a microservices architecture. The system consists of independent Spring Boot services, an Angular frontend, Spring Cloud Gateway, PostgreSQL databases, Apache Kafka for asynchronous event-driven communication, and an optional AI assistant powered by Spring AI and Ollama.
 
+## Deployment Options
+
+This project can be deployed in three different ways:
+
+- Docker Compose
+- Kubernetes Manifests
+- Helm Chart
+
+The AI components (Ollama and AI Chat Service) are optional and can be enabled for all deployment methods.
+
 ## Architecture
 
 ### Services
@@ -82,61 +92,60 @@ Client requests are routed through the API Gateway using REST APIs.
 
 Internal service-to-service communication uses synchronous REST APIs via Spring Cloud OpenFeign when an immediate response is required. Business events (such as user registration, user updates, and booking creation) are published asynchronously to Apache Kafka, where the Audit Service consumes them and persists audit logs.
 
-
 ---
 
 ## Service Responsibilities
 
 ### User Service
 
-* JWT authentication
-* User management
-* Role-based access control
-* Admin and User roles
+- JWT authentication
+- User management
+- Role-based access control
+- Admin and User roles
 
 ### Booking Service
 
-* Room management
-* Booking creation
-* Booking cancellation
-* Availability checks
-* Booking validation rules
+- Room management
+- Booking creation
+- Booking cancellation
+- Availability checks
+- Booking validation rules
 
 ### Audit Service
 
-* Consumes audit events from Apache Kafka
-* Stores immutable audit logs
-* Tracks important business events
-* Idempotent event processing
-* Passive service without business logic
+- Consumes audit events from Apache Kafka
+- Stores immutable audit logs
+- Tracks important business events
+- Idempotent event processing
+- Passive service without business logic
 
 Examples:
 
-* User registered
-* User updated
-* User deleted
-* Booking created
-* Booking cancelled
+- User registered
+- User updated
+- User deleted
+- Booking created
+- Booking cancelled
 
 ### AI Chat Service
 
-* Answers questions about users, rooms, and bookings
-* Aggregates information from the User Service, Booking Service, and Audit Service
-* Read-only access to business data
-* Optional feature
+- Answers questions about users, rooms, and bookings
+- Aggregates information from the User Service, Booking Service, and Audit Service
+- Read-only access to business data
+- Optional feature
 
 ---
 
 ## Architecture Principles
 
-* Separation of concerns
-* Independent services
-* Clear service boundaries
-* API Gateway pattern
-* REST for synchronous client requests
-* Event-driven communication using Apache Kafka
-* AI service is read-only
-* Audit service is passive
+- Separation of concerns
+- Independent services
+- Clear service boundaries
+- API Gateway pattern
+- REST for synchronous client requests
+- Event-driven communication using Apache Kafka
+- AI service is read-only
+- Audit service is passive
 
 ---
 
@@ -146,15 +155,15 @@ Built with Angular and Angular Material.
 
 ### Features
 
-* User authentication
-* Room browsing
-* Booking management
-* Admin dashboard
-* User administration
-* AI chat interface (optional)
-* Route guards
-* Role-based UI
-* JWT authentication
+- User authentication
+- Room browsing
+- Booking management
+- Admin dashboard
+- User administration
+- AI chat interface (optional)
+- Route guards
+- Role-based UI
+- JWT authentication
 
 ---
 
@@ -162,41 +171,41 @@ Built with Angular and Angular Material.
 
 ### Authentication
 
-* JWT-based authentication
-* Stateless security
-* Role-based authorization
+- JWT-based authentication
+- Stateless security
+- Role-based authorization
 
 ### Booking Rules
 
-* No bookings in the past
-* Check-out date must be after check-in date
-* Maximum booking period validation
-* Availability checking
+- No bookings in the past
+- Check-out date must be after check-in date
+- Maximum booking period validation
+- Availability checking
 
 ### Audit Logging
 
-* Booking events
-* User actions
-* System activity tracking
+- Booking events
+- User actions
+- System activity tracking
 
 ### Event Streaming
 
-* Apache Kafka messaging
-* Event-driven architecture
-* Asynchronous audit processing
-* Kafka producers and consumers
-* Consumer groups
-* Idempotent event handling
+- Apache Kafka messaging
+- Event-driven architecture
+- Asynchronous audit processing
+- Kafka producers and consumers
+- Consumer groups
+- Idempotent event handling
 
 ---
 
 ## Database Design
 
-The system uses a single PostgreSQL container with multiple databases:
+The system uses a PostgreSQL instance containing multiple databases:
 
-* userservice_db
-* booking_db
-* audit_db
+- userservice_db
+- booking_db
+- audit_db
 
 Each service owns its own database and is responsible for its own data.
 
@@ -206,94 +215,107 @@ Each service owns its own database and is responsible for its own data.
 
 ### Frontend
 
-* Angular
-* Angular Material
-* TypeScript
+- Angular
+- Angular Material
+- TypeScript
 
 ### Backend
 
-* Spring Boot
-* Spring Security
-* Spring Data JPA
-* Spring Cloud Gateway
-* Spring Cloud OpenFeign
-* Spring for Apache Kafka
-* JWT Authentication
-* Spring AI
+- Spring Boot
+- Spring Security
+- Spring Data JPA
+- Spring Cloud Gateway
+- Spring Cloud OpenFeign
+- Spring for Apache Kafka
+- JWT Authentication
+- Spring AI
 
 ### Database
 
-* PostgreSQL
+- PostgreSQL
 
 ### Messaging
 
-* Apache Kafka
+- Apache Kafka
 
 ### AI
 
-* Ollama
-* Qwen3
+- Ollama
+- Qwen3
 
 ### DevOps
 
-* Docker
-* Docker Compose
-* Maven
-* GitHub
+- Docker
+- Docker Compose
+- Kubernetes
+- Helm
+- NGINX Ingress Controller
+- Minikube
+- Maven
+- Git
+- GitHub
 
 ---
 
 ## Getting Started
 
+### Prerequisites
+
+Install the following tools before running the project:
+
+- Java 21
+- Maven
+- Docker
+- Git
+
+For Kubernetes deployments:
+
+- kubectl
+- Minikube
+- Helm
+
 ### Build Backend Services
 
-Run the following command inside each Spring Boot service directory:
+Before building Docker images or deploying the application, build each Spring Boot service:
 
 ```bash
-./mvnw clean package
+cd user-service && ./mvnw clean package
+
+cd ../booking-service && ./mvnw clean package
+
+cd ../audit-service && ./mvnw clean package
+
+cd ../api-gateway && ./mvnw clean package
+
+cd ../ai-chat-service && ./mvnw clean package
 ```
 
-Services:
+Alternatively, if you use an IDE such as IntelliJ IDEA, you can build each service directly from the IDE.
 
-* user-service
-* booking-service
-* audit-service
-* ai-chat-service
-* api-gateway
+### Deployment
 
-### Start the Application
-#### Without AI
+For Kubernetes and Helm deployments, build the Docker images inside Minikube before deploying.
 
-```bash
-docker compose up --build
-```
-This starts:
+| Deployment          | Command                                                          |
+| ------------------- | ---------------------------------------------------------------- |
+| Docker Compose      | `docker compose up --build`                                      |
+| Docker Compose + AI | `docker compose --profile ai up --build`                         |
+| Kubernetes          | `./scripts/build-images.sh` then `./scripts/deploy-k8s.sh`       |
+| Kubernetes + AI     | `./scripts/build-images.sh` then `./scripts/deploy-k8s-ai.sh`    |
+| Helm                | `./scripts/build-images.sh` then `./scripts/deploy-helm.sh`      |
+| Helm + AI           | `./scripts/build-images.sh` then `./scripts/deploy-helm.sh --ai` |
 
-* PostgreSQL
-* Apache Kafka
-* Kafka UI
-* User Service
-* Booking Service
-* Audit Service
-* API Gateway
-* Frontend
+#### Cleanup
 
-#### With AI
+| Cleanup                 | Command                     |
+| ----------------------- | --------------------------- |
+| Kubernetes Manifests    | `./scripts/cleanup.sh k8s`  |
+| Helm Chart              | `./scripts/cleanup.sh helm` |
+| Both                    | `./scripts/cleanup.sh all`  |
 
-```bash
-docker compose --profile ai up --build
-```
+The cleanup script removes Kubernetes resources created by the selected deployment method. Docker Compose can be stopped with `docker compose down`.
 
-Starts everything above plus:
-
-* Ollama
-* AI Chat Service
-
-The AI model is downloaded automatically during startup.
-
----
-
-## Application URLs
+#### Accessing the Application - Docker Compose
 
 | Component   | URL                   |
 | ----------- | --------------------- |
@@ -301,7 +323,42 @@ The AI model is downloaded automatically during startup.
 | API Gateway | http://localhost:8080 |
 | Kafka UI    | http://localhost:8085 |
 
----
+#### Accessing the Application - Kubernetes / Helm
+
+Enable the NGINX Ingress Controller:
+
+```bash
+minikube addons enable ingress
+```
+
+Add the Minikube IP to your hosts file:
+
+```text
+<MINIKUBE_IP> hotel.local
+<MINIKUBE_IP> kafka.hotel.local
+```
+
+Replace <MINIKUBE_IP> with the output of:
+
+```bash
+minikube ip
+```
+
+Application URLs:
+
+| Component   | URL                      |
+| ----------- | ------------------------ |
+| Frontend    | http://hotel.local       |
+| API Gateway | http://hotel.local/api   |
+| Kafka UI    | http://kafka.hotel.local |
+
+#### Verify the Deployment
+
+```bash
+kubectl get pods
+kubectl get ingress
+helm list
+```
 
 ## Default Credentials
 
@@ -333,19 +390,27 @@ password
 
 ## Key Concepts Demonstrated
 
-* Microservices architecture
-* API Gateway pattern (Spring Cloud Gateway)
-* Database-per-service design
-* RESTful APIs
-* Synchronous service-to-service communication with Spring Cloud OpenFeign
-* Event-driven architecture with Apache Kafka
-* Asynchronous messaging
-* Kafka producers and consumers
-* Consumer groups
-* Idempotent event processing
-* JWT authentication and authorization
-* Role-based access control (RBAC)
-* Docker containerization
-* Optional AI integration (Spring AI + Ollama)
-
-
+- Microservices architecture
+- API Gateway pattern (Spring Cloud Gateway)
+- Database-per-service design
+- RESTful APIs
+- Synchronous service-to-service communication with Spring Cloud OpenFeign
+- Event-driven architecture with Apache Kafka
+- Asynchronous messaging
+- Kafka producers and consumers
+- Consumer groups
+- Idempotent event processing
+- JWT authentication and authorization
+- Role-based access control (RBAC)
+- Docker containerization
+- Optional AI integration (Spring AI + Ollama)
+- Kubernetes Deployments
+- StatefulSets
+- ConfigMaps
+- Secrets
+- Kubernetes Services
+- Persistent Volumes
+- Kubernetes Jobs
+- NGINX Ingress
+- Helm charts
+- Infrastructure as Code

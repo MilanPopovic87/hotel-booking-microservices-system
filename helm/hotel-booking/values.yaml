@@ -1,0 +1,82 @@
+postgres:
+  image: postgres:16
+  storage: 5Gi
+  username: postgres
+  password: hotel-password
+
+app:
+  jwtSecret: YourSuperSecretKeyAtLeast32CharsLong123!
+
+ai:
+  enabled: false
+
+kafka:
+  image: apache/kafka:4.1.1
+  clusterId: MkU3OEVBNTcwNTJENDM2Qk
+
+kafkaUi:
+  image: provectuslabs/kafka-ui:latest
+  clusterName: Local
+  bootstrapServers: kafka:9092
+  port: 8080
+
+ollama:
+  image: ollama/ollama:latest
+  model: qwen3:4b
+  storage: 10Gi
+
+userService:
+  image: user-service:latest
+  replicas: 1
+  dbUrl: jdbc:postgresql://postgres:5432/userservice_db
+  bookingServiceUrl: http://booking-service:8082
+  kafkaBootstrapServers: kafka:9092
+  serverPort: 8081
+
+bookingService:
+  image: booking-service:latest
+  replicas: 1
+  dbUrl: jdbc:postgresql://postgres:5432/booking_db
+  userServiceUrl: http://user-service:8081
+  kafkaBootstrapServers: kafka:9092
+  serverPort: 8082
+
+aiChatService:
+  image: ai-chat-service:latest
+  replicas: 1
+  serverPort: 8084
+  ollamaUrl: http://ollama:11434
+  ollamaTemperature: 0.2
+  bookingServiceUrl: http://booking-service:8082
+  userServiceUrl: http://user-service:8081
+  auditServiceUrl: http://audit-service:8083
+
+auditService:
+  image: audit-service:latest
+  replicas: 1
+  dbUrl: jdbc:postgresql://postgres:5432/audit_db
+  kafkaBootstrapServers: kafka:9092
+  serverPort: 8083
+
+apiGateway:
+  image: api-gateway:latest
+  replicas: 1
+  serverPort: 8080
+  userServiceUrl: http://user-service:8081
+  bookingServiceUrl: http://booking-service:8082
+  aiChatServiceUrl: http://ai-chat-service:8084
+
+frontend:
+  image: frontend:latest
+  replicas: 1
+  port: 80
+
+ingress:
+  enabled: true
+  className: nginx
+  frontendHost: hotel.local
+  kafkaHost: kafka.hotel.local
+
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"

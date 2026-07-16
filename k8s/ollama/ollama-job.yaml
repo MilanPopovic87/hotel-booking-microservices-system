@@ -40,3 +40,5 @@ spec:
               ollama pull "$OLLAMA_MODEL"
 
               echo "Model downloaded successfully."
+
+      

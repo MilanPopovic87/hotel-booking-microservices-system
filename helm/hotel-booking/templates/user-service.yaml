@@ -1,0 +1,82 @@
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: user-service-config
+
+data:
+  DB_URL: {{ .Values.userService.dbUrl | quote }}
+
+  BOOKING_SERVICE_URL: {{ .Values.userService.bookingServiceUrl | quote }}
+
+  KAFKA_BOOTSTRAP_SERVERS: {{ .Values.userService.kafkaBootstrapServers | quote }}
+
+  SERVER_PORT: {{ .Values.userService.serverPort | quote }}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: user-service
+
+spec:
+  replicas: {{ .Values.userService.replicas }}
+
+  selector:
+    matchLabels:
+      app: user-service
+
+  template:
+    metadata:
+      labels:
+        app: user-service
+
+    spec:
+      containers:
+        - name: user-service
+          image: {{ .Values.userService.image }}
+          imagePullPolicy: Never
+
+          ports:
+            - containerPort: {{ .Values.userService.serverPort }}
+
+          envFrom:
+            - configMapRef:
+                name: user-service-config
+
+          env:
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_USER
+
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_PASSWORD
+
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: app-secret
+                  key: JWT_SECRET
+
+---
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: user-service
+
+spec:
+  selector:
+    app: user-service
+
+  ports:
+    - port: {{ .Values.userService.serverPort }}
+      targetPort: {{ .Values.userService.serverPort }}
+
+  type: ClusterIP

@@ -1,0 +1,67 @@
+{{- if .Values.ai.enabled }}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ai-chat-config
+
+data:
+  SERVER_PORT: {{ .Values.aiChatService.serverPort | quote }}
+
+  OLLAMA_URL: {{ .Values.aiChatService.ollamaUrl | quote }}
+  OLLAMA_MODEL: {{ .Values.ollama.model | quote }}
+  OLLAMA_TEMPERATURE: {{ .Values.aiChatService.ollamaTemperature | quote }}
+
+  BOOKING_SERVICE_URL: {{ .Values.aiChatService.bookingServiceUrl | quote }}
+  USER_SERVICE_URL: {{ .Values.aiChatService.userServiceUrl | quote }}
+  AUDIT_SERVICE_URL: {{ .Values.aiChatService.auditServiceUrl | quote }}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-chat-service
+
+spec:
+  replicas: {{ .Values.aiChatService.replicas }}
+
+  selector:
+    matchLabels:
+      app: ai-chat-service
+
+  template:
+    metadata:
+      labels:
+        app: ai-chat-service
+
+    spec:
+      containers:
+        - name: ai-chat-service
+
+          image: {{ .Values.aiChatService.image }}
+          imagePullPolicy: Never
+
+          ports:
+            - containerPort: {{ .Values.aiChatService.serverPort }}
+
+          envFrom:
+            - configMapRef:
+                name: ai-chat-config
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-chat-service
+
+spec:
+  selector:
+    app: ai-chat-service
+
+  ports:
+    - port: {{ .Values.aiChatService.serverPort }}
+      targetPort: {{ .Values.aiChatService.serverPort }}
+
+  type: ClusterIP
+
+{{- end }}

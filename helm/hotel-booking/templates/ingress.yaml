@@ -1,17 +1,21 @@
+{{- if .Values.ingress.enabled }}
+
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: hotel-ingress
+
+{{- with .Values.ingress.annotations }}
   annotations:
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
-    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+{{- toYaml . | nindent 4 }}
+{{- end }}
 
 spec:
-  ingressClassName: nginx
+  ingressClassName: {{ .Values.ingress.className }}
 
   rules:
 
-    - host: hotel.local
+    - host: {{ .Values.ingress.frontendHost }}
       http:
         paths:
 
@@ -21,7 +25,7 @@ spec:
               service:
                 name: frontend
                 port:
-                  number: 80
+                  number: {{ .Values.frontend.port }}
 
           - path: /api
             pathType: Prefix
@@ -31,7 +35,7 @@ spec:
                 port:
                   number: 8080
 
-    - host: kafka.hotel.local
+    - host: {{ .Values.ingress.kafkaHost }}
       http:
         paths:
           - path: /
@@ -40,4 +44,6 @@ spec:
               service:
                 name: kafka-ui
                 port:
-                  number: 8080
+                  number: {{ .Values.kafkaUi.port }}
+
+{{- end }}

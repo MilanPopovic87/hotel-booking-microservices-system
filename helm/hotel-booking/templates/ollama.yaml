@@ -1,0 +1,121 @@
+{{- if .Values.ai.enabled }}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ollama-config
+
+data:
+  OLLAMA_MODEL: {{ .Values.ollama.model | quote }}
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ollama-pvc
+
+spec:
+  accessModes:
+    - ReadWriteOnce
+
+  resources:
+    requests:
+      storage: {{ .Values.ollama.storage }}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ollama
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: ollama
+
+  template:
+    metadata:
+      labels:
+        app: ollama
+
+    spec:
+      containers:
+        - name: ollama
+
+          image: {{ .Values.ollama.image }}
+
+          ports:
+            - containerPort: 11434
+
+          volumeMounts:
+            - name: ollama-data
+              mountPath: /root/.ollama
+
+      volumes:
+        - name: ollama-data
+          persistentVolumeClaim:
+            claimName: ollama-pvc
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ollama-model-pull
+
+spec:
+  backoffLimit: 3
+
+  template:
+    spec:
+      restartPolicy: Never
+
+      containers:
+        - name: model-pull
+
+          image: {{ .Values.ollama.image }}
+
+          env:
+            - name: OLLAMA_HOST
+              value: http://ollama:11434
+
+          envFrom:
+            - configMapRef:
+                name: ollama-config
+
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Waiting for Ollama..."
+
+              until ollama list >/dev/null 2>&1; do
+                sleep 2
+              done
+
+              echo "Ollama is ready."
+
+              echo "Pulling model: $OLLAMA_MODEL"
+
+              ollama pull "$OLLAMA_MODEL"
+
+              echo "Model downloaded successfully."
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ollama
+
+spec:
+  selector:
+    app: ollama
+
+  ports:
+    - port: 11434
+      targetPort: 11434
+
+  type: ClusterIP
+
+{{- end }}
