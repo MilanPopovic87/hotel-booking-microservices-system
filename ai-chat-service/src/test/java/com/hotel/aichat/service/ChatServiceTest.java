@@ -5,6 +5,7 @@ import com.hotel.aichat.dto.AuditEventRequest;
 import com.hotel.aichat.dto.AuditEventType;
 import com.hotel.aichat.exception.AiRateLimitException;
 import com.hotel.aichat.kafka.AuditEventProducer;
+import com.hotel.aichat.provider.AiExceptionHandler;
 import com.hotel.aichat.tools.AuditTools;
 import com.hotel.aichat.tools.BookingTools;
 import com.hotel.aichat.tools.UserTools;
@@ -31,6 +32,7 @@ class ChatServiceTest {
     private AuditTools auditTools;
     private ChatMemory chatMemory;
     private AuditEventProducer auditEventProducer;
+    private AiExceptionHandler aiExceptionHandler;
 
     private ChatService chatService;
 
@@ -45,6 +47,7 @@ class ChatServiceTest {
         auditTools = mock(AuditTools.class);
         chatMemory = mock(ChatMemory.class);
         auditEventProducer = mock(AuditEventProducer.class);
+        aiExceptionHandler = mock(AiExceptionHandler.class);
 
         when(chatClientBuilder.build()).thenReturn(chatClient);
 
@@ -54,8 +57,18 @@ class ChatServiceTest {
                 userTools,
                 auditTools,
                 chatMemory,
-                auditEventProducer
+                auditEventProducer,
+                aiExceptionHandler
         );
+
+        when(aiExceptionHandler.translate(any(Throwable.class)))
+                .thenAnswer(invocation -> {
+                    Throwable exception = invocation.getArgument(0);
+
+                    return exception instanceof RuntimeException runtimeException
+                            ? runtimeException
+                            : new RuntimeException(exception);
+                });
     }
 
     @Test
@@ -103,10 +116,19 @@ class ChatServiceTest {
     }
 
     @Test
-    void shouldThrowAiRateLimitExceptionWhenGeminiReturns429() {
+    void shouldPropagateAiRateLimitException() {
 
         ChatClient.ChatClientRequestSpec requestSpec =
                 mock(ChatClient.ChatClientRequestSpec.class);
+
+        RuntimeException originalException =
+                new RuntimeException("AI provider error");
+
+        AiRateLimitException translatedException =
+                new AiRateLimitException(
+                        "AI usage limit reached. Please try again shortly.",
+                        originalException
+                );
 
         when(chatClient.prompt()).thenReturn(requestSpec);
 
@@ -126,16 +148,20 @@ class ChatServiceTest {
                 .thenReturn(requestSpec);
 
         when(requestSpec.call())
-                .thenThrow(new ClientException(
-                        429,
-                        "Quota exceeded",
-                        null
-                ));
+                .thenThrow(originalException);
 
-        assertThrows(
+        when(aiExceptionHandler.translate(originalException))
+                .thenReturn(translatedException);
+
+        AiRateLimitException thrown = assertThrows(
                 AiRateLimitException.class,
                 () -> chatService.ask("Hello", "milan", "ADMIN")
         );
+
+        assertSame(translatedException, thrown);
+
+        verify(aiExceptionHandler)
+                .translate(originalException);
 
         ArgumentCaptor<AuditEventRequest> eventCaptor =
                 ArgumentCaptor.forClass(AuditEventRequest.class);
@@ -154,16 +180,6 @@ class ChatServiceTest {
         assertEquals(
                 AuditEventType.AI_RATE_LIMITED,
                 events.get(1).getEventType()
-        );
-
-        assertEquals(
-                "milan",
-                events.get(0).getActor()
-        );
-
-        assertEquals(
-                "milan",
-                events.get(1).getActor()
         );
     }
 

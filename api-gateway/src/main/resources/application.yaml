@@ -36,4 +36,4 @@ jwt:
 
 ai:
   enabled: ${AI_ENABLED:false}
-  service-token: ${AI_SERVICE_TOKEN}
+  service-token: ${AI_SERVICE_TOKEN:}

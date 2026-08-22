@@ -76,7 +76,7 @@ The AI Chat Service is optional and can use either a local Ollama/Qwen3 model or
                │userservice_db│   │ booking_db │   │  AI Provider   │
                └──────────────┘   └────────────┘   └────────────────┘
                           │              │                │
-                          └──────────────┬────────────────┘
+                          └──────────────┼────────────────┘
                                          ▼
                                  ┌────────────────┐
                                  │  Apache Kafka  │

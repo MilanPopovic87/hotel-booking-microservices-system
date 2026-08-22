@@ -68,6 +68,13 @@ export class ChatComponent {
             };
             break;
 
+          case 502:
+            this.messages[index] = {
+              user: false,
+              text: 'AI provider authentication failed. Please check the AI service configuration.',
+            };
+            break;
+
           case 503:
             this.messages[index] = {
               user: false,

@@ -1,5 +1,6 @@
 package com.hotel.apigateway.security;
 
+import com.hotel.apigateway.config.JwtProperties;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,6 +24,7 @@ class JwtAuthenticationFilterTest {
     private static final String SECRET =
             "YourSuperSecretKeyAtLeast32CharsLong123!";
 
+    private JwtProperties jwtProperties;
     private JwtService jwtService;
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
@@ -31,13 +33,12 @@ class JwtAuthenticationFilterTest {
     @BeforeEach
     void setUp() {
 
-        jwtService = new JwtService();
+        jwtProperties = new JwtProperties();
+        jwtProperties.setSecret(SECRET);
+        jwtProperties.setExpirationMinutes(60);
 
-        org.springframework.test.util.ReflectionTestUtils.setField(
-                jwtService,
-                "secret",
-                SECRET
-        );
+
+        jwtService = new JwtService(jwtProperties);
 
         jwtAuthenticationFilter =
                 new JwtAuthenticationFilter(jwtService);

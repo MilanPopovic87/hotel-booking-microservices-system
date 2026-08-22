@@ -1,10 +1,10 @@
 package com.hotel.apigateway.security;
 
+import com.hotel.apigateway.config.JwtProperties;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
@@ -24,13 +24,11 @@ class JwtServiceTest {
     @BeforeEach
     void setUp() {
 
-        jwtService = new JwtService();
+        JwtProperties jwtProperties = new JwtProperties();
+        jwtProperties.setSecret(SECRET);
+        jwtProperties.setExpirationMinutes(60);
 
-        ReflectionTestUtils.setField(
-                jwtService,
-                "secret",
-                SECRET
-        );
+        jwtService = new JwtService(jwtProperties);
 
         signingKey = Keys.hmacShaKeyFor(
                 SECRET.getBytes(StandardCharsets.UTF_8)

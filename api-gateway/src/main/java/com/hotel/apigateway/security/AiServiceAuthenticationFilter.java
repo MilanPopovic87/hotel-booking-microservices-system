@@ -29,7 +29,14 @@ public class AiServiceAuthenticationFilter implements GlobalFilter, Ordered {
     private final String serviceToken;
 
     public AiServiceAuthenticationFilter(
-            @Value("${ai.service-token}") String serviceToken) {
+            @Value("${ai.service-token:}") String serviceToken) {
+
+        if (serviceToken.isBlank()) {
+            throw new IllegalStateException(
+                    "AI_ENABLED=true requires AI_SERVICE_TOKEN to be configured."
+            );
+        }
+
         this.serviceToken = serviceToken;
     }
 

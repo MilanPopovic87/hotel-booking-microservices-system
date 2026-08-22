@@ -2,8 +2,10 @@ package com.hotel.aichat.service;
 
 import com.hotel.aichat.dto.AuditEventRequest;
 import com.hotel.aichat.dto.AuditEventType;
+import com.hotel.aichat.exception.AiAuthenticationException;
 import com.hotel.aichat.exception.AiRateLimitException;
 import com.hotel.aichat.kafka.AuditEventProducer;
+import com.hotel.aichat.provider.AiExceptionHandler;
 import com.hotel.aichat.tools.AuditTools;
 import com.hotel.aichat.tools.BookingTools;
 import com.hotel.aichat.tools.UserTools;
@@ -29,6 +31,7 @@ public class ChatService {
     private final AuditTools auditTools;
     private final ChatMemory chatMemory;
     private final AuditEventProducer auditEventProducer;
+    private final AiExceptionHandler aiExceptionHandler;
 
     public ChatService(
             ChatClient.Builder builder,
@@ -36,7 +39,8 @@ public class ChatService {
             UserTools userTools,
             AuditTools auditTools,
             ChatMemory chatMemory,
-            AuditEventProducer auditEventProducer
+            AuditEventProducer auditEventProducer,
+            AiExceptionHandler aiExceptionHandler
     ) {
 
         this.chatClient = builder.build();
@@ -45,6 +49,7 @@ public class ChatService {
         this.auditTools = auditTools;
         this.chatMemory = chatMemory;
         this.auditEventProducer = auditEventProducer;
+        this.aiExceptionHandler = aiExceptionHandler;
     }
 
     public String ask(String message, String username, String role) {
@@ -110,32 +115,38 @@ public class ChatService {
 
         } catch (RuntimeException e) {
 
-            if (hasStatusCode(e, 429)) {
+            RuntimeException translated = aiExceptionHandler.translate(e);
 
+            if (translated instanceof AiRateLimitException) {
                 publishAuditEvent(
                         AuditEventType.AI_RATE_LIMITED,
                         username,
                         role,
-                        Map.of(
-                                "statusCode", 429
-                        ),
+                        Map.of("statusCode", 429),
                         "AI provider rate limit reached"
                 );
-                throw new AiRateLimitException(
-                        "AI usage limit reached. Please try again shortly.",
-                        e
+            } else if (translated instanceof AiAuthenticationException) {
+                publishAuditEvent(
+                        AuditEventType.AI_ERROR,
+                        username,
+                        role,
+                        Map.of("statusCode", 401),
+                        "AI provider authentication failed"
+                );
+            } else {
+                publishAuditEvent(
+                        AuditEventType.AI_ERROR,
+                        username,
+                        role,
+                        Map.of(
+                                "errorType",
+                                translated.getClass().getSimpleName()
+                        ),
+                        "AI request failed"
                 );
             }
 
-            publishAuditEvent(
-                    AuditEventType.AI_ERROR,
-                    username,
-                    role,
-                    Map.of("errorType", e.getClass().getSimpleName()),
-                    "AI request failed"
-            );
-
-            throw e;
+            throw translated;
         }
     }
 

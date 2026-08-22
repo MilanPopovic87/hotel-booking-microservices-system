@@ -21,7 +21,14 @@ public class AiServiceAuthenticationFilter extends OncePerRequestFilter {
     private final String expectedServiceToken;
 
     public AiServiceAuthenticationFilter(
-            @Value("${ai.service-token}") String expectedServiceToken) {
+            @Value("${ai.service-token:}") String expectedServiceToken) {
+
+        if (expectedServiceToken.isBlank()) {
+            throw new IllegalStateException(
+                    "AI_SERVICE_TOKEN must be configured for the AI Chat Service."
+            );
+        }
+
         this.expectedServiceToken = expectedServiceToken;
     }
 
@@ -45,7 +52,7 @@ public class AiServiceAuthenticationFilter extends OncePerRequestFilter {
 
     private boolean isValidToken(String providedToken) {
 
-        if (providedToken == null) {
+        if (providedToken == null || providedToken.isBlank()) {
             return false;
         }
 

@@ -21,4 +21,16 @@ public class GlobalExceptionHandler {
                         "message", exception.getMessage()
                 ));
     }
+
+    @ExceptionHandler(AiAuthenticationException.class)
+    public ResponseEntity<Map<String, String>> handleAiAuthenticationException(
+            AiAuthenticationException exception) {
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_GATEWAY)
+                .body(Map.of(
+                        "error", "AI provider authentication failed",
+                        "message", exception.getMessage()
+                ));
+    }
 }

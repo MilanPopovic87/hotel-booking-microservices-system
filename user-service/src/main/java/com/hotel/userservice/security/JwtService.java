@@ -1,27 +1,29 @@
 package com.hotel.userservice.security;
 
+import com.hotel.userservice.config.JwtProperties;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
 
 @Service
 public class JwtService {
 
-    @Value("${jwt.secret}")
-    private String jwtSecret;
+    private final JwtProperties jwtProperties;
 
-    @Value("${jwt.expirationMinutes}")
-    private int expirationMinutes;
+    public JwtService(JwtProperties jwtProperties) {
+        this.jwtProperties = jwtProperties;
+    }
 
     // ------------------------
     // SIGNING KEY
     // ------------------------
     private Key getSigningKey() {
-        return Keys.hmacShaKeyFor(jwtSecret.getBytes());
+        return Keys.hmacShaKeyFor(jwtProperties.getSecret().getBytes(StandardCharsets.UTF_8));
     }
 
     // ------------------------
@@ -30,7 +32,7 @@ public class JwtService {
     public String generateToken(Long userId, String username, String role) {
 
         Date now = new Date();
-        Date expiry = new Date(now.getTime() + expirationMinutes * 60 * 1000L);
+        Date expiry = new Date(now.getTime() + jwtProperties.getExpirationMinutes() * 60 * 1000L);
 
         return Jwts.builder()
                 .setSubject(username)

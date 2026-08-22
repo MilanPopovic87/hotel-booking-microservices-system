@@ -13,7 +13,7 @@ server:
   port: ${SERVER_PORT:8084}
 
 ai:
-  service-token: ${AI_SERVICE_TOKEN}
+  service-token: ${AI_SERVICE_TOKEN:}
 
 services:
   booking:
