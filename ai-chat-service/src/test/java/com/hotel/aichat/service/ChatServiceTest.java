@@ -1,6 +1,5 @@
 package com.hotel.aichat.service;
 
-import com.google.genai.errors.ClientException;
 import com.hotel.aichat.dto.AuditEventRequest;
 import com.hotel.aichat.dto.AuditEventType;
 import com.hotel.aichat.exception.AiRateLimitException;

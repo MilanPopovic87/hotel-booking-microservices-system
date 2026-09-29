@@ -45,7 +45,7 @@ public class JwtService {
     }
 
     // ------------------------
-    // EXTRACT CLAIMS (IMPORTANT)
+    // EXTRACT CLAIMS
     // ------------------------
     public Claims extractClaims(String token) {
         return Jwts.parserBuilder()

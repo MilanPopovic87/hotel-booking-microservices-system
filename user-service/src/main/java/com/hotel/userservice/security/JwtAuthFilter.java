@@ -31,7 +31,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
 
-        // 1. No token → continue chain
+        //  No token → continue chain
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
@@ -39,36 +39,35 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         String token = authHeader.substring(7);
 
-        // 2. Validate token
+        //  Validate token
         if (!jwtService.validateToken(token)) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // 3. Extract claims
+        //  Extract claims
         Claims claims = jwtService.extractClaims(token);
 
         String username = claims.getSubject();
         String role = claims.get("role", String.class);
-
         Long userId = claims.get("userId", Long.class);
 
-        // 4. Convert role → Spring Security authority
+        //  Convert role → Spring Security authority
         var authorities = List.of(
                 new SimpleGrantedAuthority("ROLE_" + role)
         );
 
-        // 5. Create Authentication object
+        //  Create Authentication object
         var authentication = new UsernamePasswordAuthenticationToken(
                 new CustomUserPrincipal(userId, username),
                 null,
                 authorities
         );
 
-        // 6. Set security context
+        //  Set security context
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        // 7. Continue filter chain
+        //  Continue filter chain
         filterChain.doFilter(request, response);
     }
 }

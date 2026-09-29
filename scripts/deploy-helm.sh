@@ -161,16 +161,8 @@ fi
 
 echo "Deploying Helm release..."
 
-if [ "$AI_PROVIDER" = "ollama" ]; then
-
-    helm upgrade --install "$RELEASE" "$CHART" \
-        --set app.aiEnabled="$AI_ENABLED" \
-        --set ai.provider="$AI_PROVIDER" \
-        --set app.jwtExpirationMinutes="$JWT_EXPIRATION_MINUTES" \
-        --wait \
-        --atomic
-
-elif [ "$AI_PROVIDER" = "gemini" ]; then
+# Wait for resources to become ready and roll back if the deployment fails.
+if [ "$AI_PROVIDER" = "ollama" ] || [ "$AI_PROVIDER" = "gemini" ]; then
 
     helm upgrade --install "$RELEASE" "$CHART" \
         --set app.aiEnabled="$AI_ENABLED" \
