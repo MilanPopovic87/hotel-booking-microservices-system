@@ -34,6 +34,14 @@ public class UserController {
     }
 
     // =========================
+    // GET USER COUNT
+    // =========================
+    @GetMapping("/internal/ai/count")
+    public long getUserCountInternal() {
+        return userService.getUserCount();
+    }
+
+    // =========================
     // GET ALL USERS
     // =========================
     @GetMapping
@@ -45,7 +53,7 @@ public class UserController {
                 .toList();
     }
 
-    @GetMapping("/internal/all")
+    @GetMapping("/internal/ai/all")
     public List<UserResponse> getAllUsersInternal() {
         return userService.getAllUsers()
                 .stream()

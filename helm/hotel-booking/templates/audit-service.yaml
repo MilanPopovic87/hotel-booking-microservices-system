@@ -62,6 +62,13 @@ spec:
                   name: app-secret
                   key: JWT_SECRET
 
+            - name: AI_SERVICE_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: app-secret
+                  key: AI_SERVICE_TOKEN
+                  optional: true
+
 ---
 apiVersion: v1
 kind: Service

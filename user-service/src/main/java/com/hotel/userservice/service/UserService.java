@@ -43,6 +43,13 @@ public class UserService {
     }
 
     // =========================
+    // GET USER COUNT
+    // =========================
+    public long getUserCount() {
+        return userRepository.count();
+    }
+
+    // =========================
     // GET ALL USERS
     // =========================
 

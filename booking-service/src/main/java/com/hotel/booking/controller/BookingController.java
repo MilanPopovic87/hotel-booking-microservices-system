@@ -21,19 +21,26 @@ public class BookingController {
 
     // Get all bookings
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
     public List<BookingResponse> getAllBookings() {
         return bookingService.getAllBookings();
     }
 
-    @GetMapping("/internal/all")
-    public List<BookingResponse> getAllBookingsInternal() {
-        return bookingService.getAllBookings();
+    // INTERNAL: Used by AI service
+    @GetMapping("/internal/ai/count")
+    public long getBookingCountInternal() {
+        return bookingService.getBookingCount();
     }
 
     // Get booking by ID
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or @bookingService.isOwner(#id, authentication.principal.id)")
     public BookingResponse getBookingById(@PathVariable Long id) {
+        return bookingService.getBookingById(id);
+    }
+
+    // INTERNAL: Used by AI service
+    @GetMapping("/internal/ai/{id}")
+    public BookingResponse getBookingByIdInternal(@PathVariable Long id) {
         return bookingService.getBookingById(id);
     }
 
@@ -50,7 +57,7 @@ public class BookingController {
         return bookingService.getBookingsByRoomId(roomId);
     }
 
-    @GetMapping("/internal/by-room/{roomId}")
+    @GetMapping("/internal/ai/by-room/{roomId}")
     public List<BookingResponse> getBookingsByRoomInternal(@PathVariable Long roomId) {
         return bookingService.getBookingsByRoomId(roomId);
     }
@@ -73,6 +80,15 @@ public class BookingController {
     public BookingResponse updateBooking(@PathVariable Long id, @RequestBody BookingRequest dto,
                                          Authentication authentication) {
         return bookingService.updateBooking(id, dto, authentication);
+    }
+
+    // INTERNAL: Used by AI service
+    @PutMapping("/internal/ai/{id}")
+    public BookingResponse updateBookingInternal(
+            @PathVariable Long id,
+            @RequestBody BookingRequest dto,
+            @RequestHeader("X-Authenticated-User") String username) {
+        return bookingService.updateBookingInternal(id, dto, username);
     }
 
     // Delete a booking

@@ -11,10 +11,10 @@ import java.util.List;
 @FeignClient(name = "audit-service", url = "${services.audit.url}")
 public interface AuditClient {
 
-    @GetMapping("/api/audit/internal/events/recent")
+    @GetMapping("/api/audit/internal/ai/events/recent")
     List<AuditEventResponse> getRecentEvents(@RequestParam int limit);
 
-    @GetMapping("/api/audit/internal/events/by-type/{type}")
+    @GetMapping("/api/audit/internal/ai/events/by-type/{type}")
     List<AuditEventResponse> getEventsByType(@PathVariable("type") String eventType, @RequestParam int limit);
 
 }

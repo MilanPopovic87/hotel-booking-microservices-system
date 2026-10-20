@@ -38,6 +38,9 @@ jwt:
   secret: ${JWT_SECRET}
   expirationMinutes: ${JWT_EXPIRATION_MINUTES:60}
 
+internal:
+  service-token: ${AI_SERVICE_TOKEN:}
+
 services:
   booking:
     url: ${BOOKING_SERVICE_URL:http://localhost:8082}

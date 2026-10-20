@@ -1,5 +1,6 @@
 package com.hotel.booking.config;
 
+import com.hotel.booking.security.InternalServiceAuthenticationFilter;
 import com.hotel.booking.security.JwtAuthFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,9 +17,12 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
+    private final InternalServiceAuthenticationFilter internalServiceAuthenticationFilter;
 
-    public SecurityConfig(JwtAuthFilter jwtAuthFilter) {
+    public SecurityConfig(JwtAuthFilter jwtAuthFilter,
+                          InternalServiceAuthenticationFilter internalServiceAuthenticationFilter) {
         this.jwtAuthFilter = jwtAuthFilter;
+        this.internalServiceAuthenticationFilter = internalServiceAuthenticationFilter;
     }
 
     @Bean
@@ -54,8 +58,9 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
 
-                // Validate JWT before Spring Security processes authentication
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(internalServiceAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+
+                .addFilterAfter(jwtAuthFilter, InternalServiceAuthenticationFilter.class)
 
                 .build();
     }

@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -23,6 +24,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(AuditController.class)
+@TestPropertySource(properties = {"internal.service-token=test-token"})
 class AuditControllerTest {
 
     @Autowired
@@ -83,8 +85,9 @@ class AuditControllerTest {
                 .thenReturn(List.of(event));
 
         mockMvc.perform(
-                        get("/api/audit/internal/events/recent")
+                        get("/api/audit/internal/ai/events/recent")
                                 .param("limit", "10")
+                                .header("X-Internal-Service-Token", "test-token")
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].eventId")
@@ -113,8 +116,9 @@ class AuditControllerTest {
         )).thenReturn(List.of(event));
 
         mockMvc.perform(
-                        get("/api/audit/internal/events/by-type/BOOKING_CANCELLED")
+                        get("/api/audit/internal/ai/events/by-type/BOOKING_CANCELLED")
                                 .param("limit", "10")
+                                .header("X-Internal-Service-Token", "test-token")
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].eventId")

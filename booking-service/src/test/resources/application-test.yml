@@ -16,3 +16,4 @@ spring:
 
 jwt:
   secret: test-only-jwt-secret-key-32-bytes-minimum
+
