@@ -48,6 +48,11 @@ public class BookingService {
 
     // ================= READ =================
 
+    public long getBookingCount() {
+        return bookingRepository.count();
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
     public List<BookingResponse> getAllBookings() {
 
         return bookingRepository.findAll()
@@ -56,7 +61,6 @@ public class BookingService {
                 .toList();
     }
 
-    @PreAuthorize("hasRole('ADMIN') or @bookingService.isOwner(#id, authentication.principal.id)")
     public BookingResponse getBookingById(Long id) {
         Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -152,9 +156,27 @@ public class BookingService {
     /**
      * Updates an existing booking.
      */
-    @PreAuthorize("hasRole('ADMIN') or @bookingService.isOwner(#id,  authentication.principal.id)")
+    @PreAuthorize("hasRole('ADMIN') or " + "@bookingService.isOwner(#id, authentication.principal.id)")
     @Transactional
     public BookingResponse updateBooking(Long id, BookingRequest dto, Authentication authentication) {
+
+        CustomUserPrincipal user =
+                (CustomUserPrincipal) authentication.getPrincipal();
+
+        return doUpdateBooking(id, dto, user.getUsername(), "USER");
+    }
+
+    @Transactional
+    public BookingResponse updateBookingInternal(Long id, BookingRequest dto, String username) {
+
+        return doUpdateBooking(id, dto, username, "AI_CHAT");
+    }
+
+    private BookingResponse doUpdateBooking(
+            Long id,
+            BookingRequest dto,
+            String username,
+            String performedVia) {
 
         Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -163,44 +185,56 @@ public class BookingService {
                 ));
 
         Long roomId = dto.getRoomId();
-        Room room = roomService.getRoomById(roomId);  // validate room exists
 
-        validateBookingDates(dto.getCheckInDate(), dto.getCheckOutDate());
+        Room room = roomService.getRoomById(roomId);
 
-        checkOverlap(roomId, dto.getCheckInDate(), dto.getCheckOutDate(), booking.getId());
+        validateBookingDates(
+                dto.getCheckInDate(),
+                dto.getCheckOutDate()
+        );
+
+        checkOverlap(
+                roomId,
+                dto.getCheckInDate(),
+                dto.getCheckOutDate(),
+                booking.getId()
+        );
 
         booking.setRoomId(roomId);
         booking.setCheckInDate(dto.getCheckInDate());
         booking.setCheckOutDate(dto.getCheckOutDate());
 
-        Booking updatedBooking = bookingRepository.save(booking);
-
-        // Send audit event
-        CustomUserPrincipal user =
-                (CustomUserPrincipal) authentication.getPrincipal();
+        Booking updatedBooking =
+                bookingRepository.save(booking);
 
         Map<String, Object> payload = Map.of(
                 "roomName", room.getName(),
                 "checkInDate", dto.getCheckInDate(),
                 "checkOutDate", dto.getCheckOutDate(),
-                "price", room.getPrice()
+                "price", room.getPrice(),
+                "performedVia", performedVia
         );
 
-        AuditEventRequest auditEvent = new AuditEventRequest(
-                UUID.randomUUID(),
-                AuditEventType.BOOKING_UPDATED,
-                "booking-service",
-                user.getUsername(),
-                "BOOKING",
-                updatedBooking.getId(),
-                payload,
-                "Booking updated successfully"
-        );
+        AuditEventRequest auditEvent =
+                new AuditEventRequest(
+                        UUID.randomUUID(),
+                        AuditEventType.BOOKING_UPDATED,
+                        "booking-service",
+                        username,
+                        "BOOKING",
+                        updatedBooking.getId(),
+                        payload,
+                        "Booking updated successfully"
+                );
 
         try {
             auditEventProducer.send(auditEvent);
         } catch (Exception e) {
-            log.error("Failed to send audit event for booking {}", updatedBooking.getId(), e);
+            log.error(
+                    "Failed to send audit event for booking {}",
+                    updatedBooking.getId(),
+                    e
+            );
         }
 
         return bookingMapper.toResponse(updatedBooking);

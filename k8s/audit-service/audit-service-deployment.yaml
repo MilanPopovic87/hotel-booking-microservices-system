@@ -42,8 +42,9 @@ spec:
                   name: postgres-secret
                   key: POSTGRES_PASSWORD
 
-            - name: JWT_SECRET
+            - name: AI_SERVICE_TOKEN
               valueFrom:
                 secretKeyRef:
                   name: app-secret
-                  key: JWT_SECRET
+                  key: AI_SERVICE_TOKEN
+                  optional: true

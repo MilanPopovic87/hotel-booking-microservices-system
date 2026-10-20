@@ -52,7 +52,7 @@ public class AuditController {
         return auditService.saveEvent(event);
     }
 
-    @GetMapping("/events/recent")
+    @GetMapping("/ai/events/recent")
     public List<AuditEventResponse> getRecentEvents(@RequestParam(defaultValue = "20") int limit) {
 
         return auditService.getRecentEvents(limit)
@@ -61,7 +61,7 @@ public class AuditController {
                 .toList();
     }
 
-    @GetMapping("/events/by-type/{type}")
+    @GetMapping("/ai/events/by-type/{type}")
     public List<AuditEventResponse> getEventsByType(@PathVariable AuditEventType type,
                                                     @RequestParam(defaultValue = "20") int limit) {
 

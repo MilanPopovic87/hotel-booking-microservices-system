@@ -157,13 +157,25 @@ Examples:
 
 - Optional AI assistant for administrators
 - Built with Spring AI
-- Provides read-only access to users, bookings, and audit events
+- Uses tool calling to retrieve data from backend services
+- Supports booking updates with explicit human confirmation
 - Protected by a dedicated service-to-service authentication token
-- Uses tool calling to retrieve information from backend services
 - AI requests are registered by the Audit Service
 - Supports two AI providers:
   - Ollama with Qwen3 for local AI processing
   - Google Gemini API for cloud-based AI processing
+
+
+#### AI-Assisted Booking Updates
+
+The AI Chat Service supports booking updates through a human-confirmation workflow.
+
+- The AI proposes a booking change without executing it.
+- The update is executed by application code only after the user explicitly replies `YES`. Replying `NO` cancels the request.
+- Confirmation applies to the exact proposed change and can only be consumed once.
+- The Booking Service remains responsible for business validation, persistence, and audit logging.
+
+**Implementation note:** Pending confirmations are stored in memory and are lost on restart. They are not shared across multiple AI Chat Service instances.
 
 ---
 
@@ -175,7 +187,7 @@ Examples:
 - API Gateway pattern
 - REST for synchronous client requests
 - Event-driven communication using Apache Kafka
-- AI service is read-only
+- AI-proposed booking updates require explicit human confirmation
 - AI provider can be switched between Ollama and Google Gemini
 - Audit service is passive
 - Externalized configuration and credentials
@@ -474,7 +486,7 @@ password
 - Optional AI integration with Spring AI
 - AI provider integration with Ollama/Qwen3 or Google Gemini
 - AI tool calling for accessing backend data
-- Read-only AI access to business data
+- Human-in-the-loop approval for AI-assisted booking updates
 - Kubernetes Deployments
 - StatefulSets
 - ConfigMaps

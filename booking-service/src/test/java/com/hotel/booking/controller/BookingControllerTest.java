@@ -3,6 +3,7 @@ package com.hotel.booking.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hotel.booking.dto.BookingRequest;
 import com.hotel.booking.dto.BookingResponse;
+import com.hotel.booking.security.CustomUserPrincipal;
 import com.hotel.booking.security.JwtAuthFilter;
 import com.hotel.booking.service.BookingService;
 import org.junit.jupiter.api.Test;
@@ -13,9 +14,13 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.web.servlet.MockMvc;
@@ -27,6 +32,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -45,7 +51,7 @@ class BookingControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
+    @MockBean(name = "bookingService")
     private BookingService bookingService;
 
     @Test
@@ -90,7 +96,6 @@ class BookingControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "user", roles = "USER")
     void shouldGetBookingById() throws Exception {
 
         // Arrange
@@ -104,11 +109,28 @@ class BookingControllerTest {
                 LocalDate.of(2026, 8, 13)
         );
 
+        CustomUserPrincipal principal = new CustomUserPrincipal(
+                10L,
+                "user",
+                List.of(new SimpleGrantedAuthority("ROLE_USER"))
+        );
+
+        Authentication authentication =
+                new UsernamePasswordAuthenticationToken(
+                        principal,
+                        null,
+                        principal.getAuthorities()
+                );
+
+        when(bookingService.isOwner(1L, 10L))
+                .thenReturn(true);
+
         when(bookingService.getBookingById(1L))
                 .thenReturn(response);
 
         // Act + Assert
-        mockMvc.perform(get("/api/bookings/1"))
+        mockMvc.perform(get("/api/bookings/1")
+                        .with(authentication(authentication)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.userId").value(10))
@@ -116,6 +138,7 @@ class BookingControllerTest {
                 .andExpect(jsonPath("$.username").value("testuser"))
                 .andExpect(jsonPath("$.roomName").value("Test Room"));
 
+        verify(bookingService).isOwner(1L, 10L);
         verify(bookingService).getBookingById(1L);
     }
 
@@ -210,6 +233,8 @@ static class TestSecurityConfig {
         return http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.GET, "/api/bookings")
+                        .hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .build();

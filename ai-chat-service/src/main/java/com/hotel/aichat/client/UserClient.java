@@ -10,7 +10,10 @@ import java.util.List;
 @FeignClient(name = "user-service", url = "${services.user.url}")
 public interface UserClient {
 
-    @GetMapping("/api/users/internal/all")
+    @GetMapping("/api/users/internal/ai/count")
+    long getUserCount();
+
+    @GetMapping("/api/users/internal/ai/all")
     List<UserResponse> getAllUsers();
 
     @GetMapping("/api/users/internal/{id}")

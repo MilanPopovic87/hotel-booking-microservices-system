@@ -43,6 +43,9 @@ jwt:
   secret: ${JWT_SECRET}
   expirationMinutes: ${JWT_EXPIRATION_MINUTES:60}
 
+internal:
+  service-token: ${AI_SERVICE_TOKEN:}
+
 services:
   user:
     url: ${USER_SERVICE_URL:http://localhost:8081}

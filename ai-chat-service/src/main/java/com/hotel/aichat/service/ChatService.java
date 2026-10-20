@@ -1,18 +1,14 @@
 package com.hotel.aichat.service;
 
+import com.hotel.aichat.agent.HotelBookingAgent;
 import com.hotel.aichat.dto.AuditEventRequest;
 import com.hotel.aichat.dto.AuditEventType;
 import com.hotel.aichat.exception.AiAuthenticationException;
 import com.hotel.aichat.exception.AiRateLimitException;
 import com.hotel.aichat.kafka.AuditEventProducer;
 import com.hotel.aichat.provider.AiExceptionHandler;
-import com.hotel.aichat.tools.AuditTools;
-import com.hotel.aichat.tools.BookingTools;
-import com.hotel.aichat.tools.UserTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -25,29 +21,17 @@ public class ChatService {
     private static final Logger log =
             LoggerFactory.getLogger(ChatService.class);
 
-    private final ChatClient chatClient;
-    private final BookingTools bookingTools;
-    private final UserTools userTools;
-    private final AuditTools auditTools;
-    private final ChatMemory chatMemory;
+    private final HotelBookingAgent hotelBookingAgent;
     private final AuditEventProducer auditEventProducer;
     private final AiExceptionHandler aiExceptionHandler;
 
     public ChatService(
-            ChatClient.Builder builder,
-            BookingTools bookingTools,
-            UserTools userTools,
-            AuditTools auditTools,
-            ChatMemory chatMemory,
+            HotelBookingAgent hotelBookingAgent,
             AuditEventProducer auditEventProducer,
             AiExceptionHandler aiExceptionHandler
     ) {
 
-        this.chatClient = builder.build();
-        this.bookingTools = bookingTools;
-        this.userTools = userTools;
-        this.auditTools = auditTools;
-        this.chatMemory = chatMemory;
+        this.hotelBookingAgent = hotelBookingAgent;
         this.auditEventProducer = auditEventProducer;
         this.aiExceptionHandler = aiExceptionHandler;
     }
@@ -55,27 +39,6 @@ public class ChatService {
     public String ask(String message, String username, String role) {
 
         String conversationId = "chat-" + username;
-
-        String systemPrompt = """
-            You are an AI assistant for a hotel management system.
-            
-            The current authenticated user is %s.
-            The user's role is %s.
-
-            You can access hotel management data through tools:
-            - bookings
-            - users
-            - audit events
-
-            Rules:
-            - Use tools whenever information from the hotel management system is required.
-            - Never invent or guess system data.
-            - If information is unavailable, clearly say so.
-            - Use clear and concise formatting.
-            - For lists of records, use bullet points or tables when appropriate.
-            - If the user's request is ambiguous, ask for clarification.
-            - Do not reveal internal tool names or implementation details.
-            """.formatted(username, role);;
 
         // Record that an AI operation was requested.
         publishAuditEvent(
@@ -85,19 +48,12 @@ public class ChatService {
                 Map.of("messageLength", message.length()),
                 "AI request started");
         try {
-            String answer = chatClient.prompt()
-                    .system(systemPrompt)
-                    .tools(
-                            bookingTools,
-                            userTools,
-                            auditTools
-                    )
-                    .advisors(advisor -> advisor
-                            .param(ChatMemory.CONVERSATION_ID, conversationId)
-                    )
-                    .user(message)
-                    .call()
-                    .content();
+            String answer = hotelBookingAgent.run(
+                    message,
+                    username,
+                    role,
+                    conversationId
+            );
 
             // Record successful AI operation.
             publishAuditEvent(
@@ -195,20 +151,4 @@ public class ChatService {
         return result;
     }
 
-    private boolean hasStatusCode(Throwable exception, int statusCode) {
-
-        Throwable current = exception;
-
-        while (current != null) {
-
-            if (current instanceof com.google.genai.errors.ClientException clientException
-                    && clientException.code() == statusCode) {
-                return true;
-            }
-
-            current = current.getCause();
-        }
-
-        return false;
-    }
 }

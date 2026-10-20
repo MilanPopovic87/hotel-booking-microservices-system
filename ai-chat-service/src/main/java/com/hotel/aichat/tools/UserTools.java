@@ -16,6 +16,11 @@ public class UserTools {
         this.userClient = userClient;
     }
 
+    @Tool(description = "Returns the total number of registered users")
+    public long getUserCount() {
+        return userClient.getUserCount();
+    }
+
     @Tool(description = "Returns all registered users in the hotel system")
     public List<UserResponse> getAllUsers() {
         return userClient.getAllUsers();

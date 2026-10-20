@@ -37,4 +37,7 @@ spring:
 server:
   port: ${SERVER_PORT:8083}
 
+internal:
+  service-token: ${AI_SERVICE_TOKEN:}
+
 
